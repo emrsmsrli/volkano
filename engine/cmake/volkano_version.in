@@ -1,0 +1,20 @@
+/*
+ * Copyright (C) 2022 Emre Simsirli
+ *
+ * Licensed under GPLv3 or any later version.
+ * Refer to the included LICENSE file.
+ */
+
+#pragma once
+
+#include <string_view>
+
+namespace volkano {
+
+[[maybe_unused]] constexpr auto version_major = @volkano_VERSION_MAJOR@;
+[[maybe_unused]] constexpr auto version_minor = @volkano_VERSION_MINOR@;
+[[maybe_unused]] constexpr auto version_patch = @volkano_VERSION_PATCH@;
+
+[[maybe_unused]] constexpr std::string_view version = "@volkano_VERSION@";
+
+} // namespace volkano

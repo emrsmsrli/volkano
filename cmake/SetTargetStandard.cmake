@@ -1,0 +1,7 @@
+function(target_set_cxx_standard target standard)
+    if(MSVC)
+        target_compile_options(${target} PUBLIC "/std:c++${standard}")
+    else()
+        target_compile_options(${target} PUBLIC "-std=c++${standard}")
+    endif()
+endfunction()

@@ -1,0 +1,40 @@
+function(enable_sanitizers project_name)
+    if(MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(SANITIZERS "")
+
+        if(NOT MSVC)
+            option(ENABLE_COVERAGE "Enable coverage reporting for gcc/clang" FALSE)
+
+            if(ENABLE_COVERAGE)
+                target_compile_options(project_options PRIVATE --coverage -O0 -g)
+                target_link_libraries(project_options PRIVATE --coverage)
+            endif()
+
+            option(ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" FALSE)
+            if(ENABLE_SANITIZER_MEMORY)
+                list(APPEND SANITIZERS "memory")
+            endif()
+
+            option(ENABLE_SANITIZER_UNDEFINED_BEHAVIOR "Enable undefined behavior sanitizer" FALSE)
+            if(ENABLE_SANITIZER_UNDEFINED_BEHAVIOR)
+                list(APPEND SANITIZERS "undefined")
+            endif()
+        endif()
+
+        option(ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" FALSE)
+        if(ENABLE_SANITIZER_ADDRESS)
+            list(APPEND SANITIZERS "address")
+        endif()
+
+        list(JOIN SANITIZERS "," LIST_OF_SANITIZERS)
+    endif()
+
+    if(LIST_OF_SANITIZERS AND NOT "${LIST_OF_SANITIZERS}" STREQUAL "")
+        if(MSVC)
+            target_compile_options(${project_name} PRIVATE /fsanitize=${LIST_OF_SANITIZERS})
+        else()
+            target_compile_options(${project_name} PRIVATE -fsanitize=${LIST_OF_SANITIZERS})
+            target_link_libraries(${project_name}  PRIVATE -fsanitize=${LIST_OF_SANITIZERS})
+        endif()
+    endif()
+endfunction()
