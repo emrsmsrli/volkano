@@ -13,4 +13,6 @@
 #elif defined(__linux) || defined(__unix)
   #define PLATFORM_WINDOWS 0
   #define PLATFORM_UNIX 1
-#endif // Platform definitions
+#else
+  #pragma error "unknown platform"
+#endif // PLATFORMS
