@@ -11,6 +11,7 @@ project(volkano VERSION 0.0.1 DESCRIPTION "a vulkan based engine" LANGUAGES CXX)
 configure_file(cmake/volkano_version.in
         ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/version.h)
 
+find_package(magic_enum CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 
 include(SetTargetStandard)
@@ -25,12 +26,14 @@ if(${LOG_VERBOSITY_INDEX} EQUAL -1)
     list(FIND LOG_VERBOSITY_LIST "WARNING" LOG_VERBOSITY_INDEX)
 endif()
 
-add_library(${PROJECT_NAME} STATIC
+add_library(${PROJECT_NAME}
         include/engine/volkano.h
         include/engine/version.h
         include/engine/core/int_types.h
         include/engine/core/platform.h
-        src/dummy.cpp)
+        include/engine/core/logging/logging.h
+        include/engine/core/logging/logging_types.h
+        src/core/logging/logging.cpp)
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE src/
@@ -41,9 +44,13 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC VK_LOG_COMPILE_TIME_VERBOSITY=
 target_precompile_headers(${PROJECT_NAME}
         PUBLIC include/engine/volkano.h)
 target_link_libraries(${PROJECT_NAME}
-        PUBLIC fmt::fmt
+        PUBLIC fmt::fmt magic_enum::magic_enum
         PRIVATE Vulkan::Vulkan)
 
 enable_sanitizers(${PROJECT_NAME})
+
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PUBLIC /Zc:preprocessor)
+endif()
 
 add_library(volkano::engine ALIAS ${PROJECT_NAME})
