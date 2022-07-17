@@ -13,8 +13,8 @@
 #include <fmt/color.h>
 #include <fmt/ostream.h>
 
+#include "engine/core/algo/find.h"
 #include "engine/core/util/fmt_formatters.h"
-#include "engine/core/util/ranges.h"
 
 VK_DEFINE_LOG_CATEGORY(general, info);
 
@@ -102,7 +102,7 @@ void logger::set_category_verbosity(const std::string_view category_name, const 
 
 log_category* logger::find_category_by_name(const std::string_view name) noexcept
 {
-    const auto it = find_if(categories_, [name](const log_category* cat) { return name == cat->name(); });
+    const auto it = algo::find_if(categories_, [name](const log_category* cat) { return name == cat->name(); });
     return it == categories_.end() ? nullptr : *it;
 }
 

@@ -31,6 +31,9 @@ add_library(${PROJECT_NAME}
         include/engine/version.h
         include/engine/core/int_types.h
         include/engine/core/platform.h
+        include/engine/core/algo/contains.h
+        include/engine/core/algo/find.h
+        include/engine/core/algo/index_of.h
         include/engine/core/logging/logging.h
         include/engine/core/logging/logging_types.h
         src/core/logging/logging.cpp)
