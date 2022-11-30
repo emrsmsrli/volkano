@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2022 Emre Simsirli
+ *
+ * Licensed under GPLv3 or any later version.
+ * Refer to the included LICENSE file.
+ */
+
 #include <iostream>
 #include <string_view>
 
