@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Emre Simsirli
+ * Copyright (C) 2022 Emre Simsirli
  *
  * Licensed under GPLv3 or any later version.
  * Refer to the included LICENSE file.
@@ -7,12 +7,9 @@
 
 #pragma once
 
-#ifndef VOLKANO_LOGGING_TYPES_H
-#define VOLKANO_LOGGING_TYPES_H
-
 #include <string_view>
 
-#include "engine/types.h"
+#include "engine/core/int_types.h"
 
 namespace volkano {
 
@@ -38,5 +35,3 @@ struct log_sink {
 };
 
 } // namespace volkano
-
-#endif // VOLKANO_LOGGING_TYPES_H
