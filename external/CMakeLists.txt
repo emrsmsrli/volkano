@@ -17,6 +17,7 @@ endfunction()
 
 # add_header_only_library(cxxopts)
 # add_header_only_library(access_private)
+add_header_only_library(debugbreak)
 
 add_subdirectory(imgui)
 # add_subdirectory(fmt)

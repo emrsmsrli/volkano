@@ -34,15 +34,18 @@ target_compile_definitions(project_options INTERFACE
         $<$<BOOL:${VK_ENABLE_ASSERTIONS}>:VK_ENABLE_ASSERTIONS>)
 
 find_package(fmt CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
+
+add_subdirectory(external/)
+add_subdirectory(engine/)
 
 if(VK_ENABLE_TESTS)
     enable_testing()
     add_subdirectory(test/)
 endif()
 
-add_subdirectory(external/)
-add_subdirectory(engine/)
+find_package(Vulkan REQUIRED) # todo remove debug
 
 add_executable(${PROJECT_NAME} main.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan glfw volkano::engine) # todo move dependencies to volkano::engine
+target_link_libraries(${PROJECT_NAME} PRIVATE volkano::engine
+        Vulkan::Vulkan # todo remove debug
+)

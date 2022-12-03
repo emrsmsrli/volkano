@@ -26,7 +26,7 @@
 #define VK_DEFINE_LOG_CATEGORY(name, default_verbosity) ::volkano::log_category logcat_ ## name{#name, ::volkano::log_verbosity::default_verbosity} /*NOLINT cert-err58-cpp*/
 #define VK_DEFINE_LOG_CATEGORY_STATIC(name, default_verbosity) static VK_DEFINE_LOG_CATEGORY(name, default_verbosity)
 
-#define VK_LOG(category, verbosity, ...)                                                \
+#define VK_LOG(category, verbosity, format, ...)                                        \
 do {                                                                                    \
     using namespace fmt::literals;                                                      \
     constexpr auto v_current = ::volkano::log_verbosity::verbosity;                     \
@@ -34,7 +34,7 @@ do {                                                                            
     if constexpr(v_current <= v_allowed) {                                              \
         ::volkano::logger::get().log(logcat_ ## category,                               \
           v_current, std::source_location::current(),                                   \
-          __VA_ARGS__);                                                                 \
+          format __VA_OPT__(,) __VA_ARGS__);                                            \
     }                                                                                   \
 } while(0)
 

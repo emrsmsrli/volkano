@@ -5,6 +5,5 @@
  * Refer to the included LICENSE file.
  */
 
-#pragma once
-
-#include "engine/core/int_types.h"
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>

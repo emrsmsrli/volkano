@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Emre Simsirli
+ * Copyright (C) 2022 Emre Simsirli
  *
  * Licensed under GPLv3 or any later version.
  * Refer to the included LICENSE file.
@@ -7,14 +7,11 @@
 
 #pragma once
 
-#ifndef VOLKANO_MATH_HELPERS_H
-#define VOLKANO_MATH_HELPERS_H
-
 #include <concepts>
 #include <cmath>
 
-#include "engine/types.h"
-#include "engine/math/constants.h"
+#include "engine/core/int_types.h"
+#include "engine/core/math/constants.h"
 
 namespace volkano::math {
 
@@ -33,15 +30,13 @@ bool is_nearly_equal(const Fp l, const Fp r, const Fp epsilon = consts::small_fl
 template<std::floating_point Fp>
 constexpr Fp to_radians(const Fp degrees) noexcept
 {
-    return degrees * consts::pi<Fp> / T(180.0);
+    return degrees * std::numbers::pi_v<Fp> / Fp(180.0);
 }
 
 template<std::floating_point Fp>
 constexpr Fp to_degrees(const Fp radians) noexcept
 {
-    return radians * Fp(180.0) / consts::pi_v<Fp>;
+    return radians * Fp(180.0) / std::numbers::pi_v<Fp>;
 }
 
 } // namespace volkano::math
-
-#endif // VOLKANO_MATH_HELPERS_H

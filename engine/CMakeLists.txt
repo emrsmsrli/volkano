@@ -26,30 +26,53 @@ if(${LOG_VERBOSITY_INDEX} EQUAL -1)
     list(FIND LOG_VERBOSITY_LIST "WARNING" LOG_VERBOSITY_INDEX)
 endif()
 
-add_library(${PROJECT_NAME} STATIC
-        src/string/string_utils.cpp
-        src/logging/logging.cpp)
+add_library(${PROJECT_NAME}
+        include/engine/volkano.h
+        include/engine/version.h
+        include/engine/core/assert.h
+        include/engine/core/int_types.h
+        include/engine/core/platform.h
+        include/engine/core/type_traits.h
+        include/engine/core/algo/contains.h
+        include/engine/core/algo/find.h
+        include/engine/core/algo/index_of.h
+        include/engine/core/container/static_vector.h
+        include/engine/core/math/constants.h
+        include/engine/core/math/math_helpers.h
+        include/engine/core/memory/aligned_union.h
+        include/engine/core/logging/logging.h
+        include/engine/core/logging/logging_types.h
+        src/core/logging/logging.cpp
+        src/renderer/renderer.cpp
+        src/renderer/window_unix.cpp
+        src/renderer/window_win32.cpp)
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE src/
         PUBLIC include/)
 target_set_cxx_standard(${PROJECT_NAME} 20)
+target_set_warnings(${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME} PUBLIC VK_LOG_COMPILE_TIME_VERBOSITY=${LOG_VERBOSITY_INDEX})
 target_precompile_headers(${PROJECT_NAME}
-        PRIVATE include/engine/volkano.h)
+        PUBLIC include/engine/volkano.h)
 target_link_libraries(${PROJECT_NAME}
-        PRIVATE Vulkan::Vulkan
-        PUBLIC
-            fmt::fmt
-            range-v3-concepts
-            magic_enum::magic_enum)
+        PUBLIC fmt::fmt magic_enum::magic_enum
+        PRIVATE Vulkan::Vulkan debugbreak::debugbreak)
+
+enable_sanitizers(${PROJECT_NAME})
 
 if(MSVC)
     # Don't use the legacy preprocessor
     target_compile_options(${PROJECT_NAME} PUBLIC /Zc:preprocessor)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC
+            PLATFORM_WIN32=1
+            PLATFORM_UNIX=0)
+else()
+    target_compile_definitions(${PROJECT_NAME} PUBLIC
+            PLATFORM_WIN32=0
+            PLATFORM_UNIX=1)
 endif()
 
-target_set_warnings(${PROJECT_NAME})
-enable_sanitizers(${PROJECT_NAME})
+target_compile_definitions(${PROJECT_NAME} PUBLIC DEBUG=$<IF:$<CONFIG:Debug>,1,0>)
 
 add_library(volkano::engine ALIAS ${PROJECT_NAME})

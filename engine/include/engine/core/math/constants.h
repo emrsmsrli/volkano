@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Emre Simsirli
+ * Copyright (C) 2022 Emre Simsirli
  *
  * Licensed under GPLv3 or any later version.
  * Refer to the included LICENSE file.
@@ -7,21 +7,18 @@
 
 #pragma once
 
-#ifndef VOLKANO_CONSTANTS_H
-#define VOLKANO_CONSTANTS_H
-
 #include <concepts>
 #include <numbers>
 
-#include "engine/types.h"
+#include "engine/core/int_types.h"
 
 namespace volkano::math::consts {
 
-template<std::floating_point Floating> inline constexpr Floating half_pi_v = std::numbers::pi_v<Floating> / Floating(2.0);
-template<std::floating_point Floating> inline constexpr Floating quarter_pi_v = std::numbers::pi_v<Floating> / Floating(4.0);
-template<std::floating_point Floating> inline constexpr Floating two_over_pi_v = Floating(2.0) / std::numbers::pi_v<Floating>;
-template<std::floating_point Floating> inline constexpr Floating two_over_sqrt_pi_v = 1.12837916709551257390;
-template<std::floating_point Floating> inline constexpr Floating inv_sqrt2_v = Floating(1.0) / std::numbers::sqrt2_v<Floating>;
+template<std::floating_point Float> inline constexpr Float half_pi_v = std::numbers::pi_v<Float> / Float(2.0);
+template<std::floating_point Float> inline constexpr Float quarter_pi_v = std::numbers::pi_v<Float> / Float(4.0);
+template<std::floating_point Float> inline constexpr Float two_over_pi_v = Float(2.0) / std::numbers::pi_v<Float>;
+template<std::floating_point Float> inline constexpr Float two_over_sqrt_pi_v = 1.12837916709551257390;
+template<std::floating_point Float> inline constexpr Float inv_sqrt2_v = Float(1.0) / std::numbers::sqrt2_v<Float>;
 
 inline constexpr f32 small_float      = 0.00001f;
 inline constexpr f32 e                = std::numbers::e_v<f32>;
@@ -42,5 +39,3 @@ inline constexpr f32 two_over_sqrt_pi = two_over_sqrt_pi_v<f32>;
 inline constexpr f32 inv_sqrt2        = two_over_sqrt_pi_v<f32>;
 
 } // namespace volkano::math::consts
-
-#endif // VOLKANO_CONSTANTS_H
