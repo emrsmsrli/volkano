@@ -7,15 +7,12 @@
 
 #pragma once
 
-#ifndef VOLKANO_PLATFORM_H
-#define VOLKANO_PLATFORM_H
-
 #if defined(_WIN64) || defined(_WIN32)
   #define PLATFORM_WINDOWS 1
   #define PLATFORM_UNIX 0
 #elif defined(__linux) || defined(__unix)
   #define PLATFORM_WINDOWS 0
   #define PLATFORM_UNIX 1
-#endif // Platform definitions
-
-#endif // VOLKANO_PLATFORM_H
+#else
+  #pragma error "unknown platform"
+#endif // PLATFORMS
