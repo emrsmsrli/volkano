@@ -44,10 +44,7 @@ add_library(${PROJECT_NAME}
         include/engine/core/math/math_helpers.h
         include/engine/core/memory/aligned_union.h
         include/engine/core/util/fmt_formatters.h
-        src/core/logging/logging.cpp
-        src/renderer/renderer.cpp
-        src/renderer/window_unix.cpp
-        src/renderer/window_win32.cpp)
+        src/core/logging/logging.cpp)
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE src/
