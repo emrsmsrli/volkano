@@ -6,7 +6,13 @@
 #
 
 cmake_minimum_required(VERSION 3.22)
-project(volkano VERSION 0.0.1 DESCRIPTION "vulkan based engine" LANGUAGES CXX)
+project(volkano VERSION 0.0.1 DESCRIPTION "a vulkan based engine" LANGUAGES CXX)
+
+configure_file(cmake/volkano_version.in
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/version.h)
+
+find_package(magic_enum CONFIG REQUIRED)
+find_package(Vulkan REQUIRED)
 
 include(SetTargetStandard)
 
