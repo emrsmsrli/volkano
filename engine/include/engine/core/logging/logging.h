@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <fmt/format.h>
+#include <fmt/compile.h>
 
 #include "engine/core/int_types.h"
 #include "engine/core/platform.h"
@@ -34,11 +35,11 @@ do {                                                                            
     if constexpr(v_current <= v_allowed) {                                              \
         ::volkano::logger::get().log(logcat_ ## category,                               \
           v_current, std::source_location::current(),                                   \
-          format __VA_OPT__(,) __VA_ARGS__);                                            \
+          format ## _cf __VA_OPT__(,) __VA_ARGS__);                                     \
     }                                                                                   \
 } while(0)
 
-#define VK_CLOG(condition, category, verbosity, ...) do { if((condition)) { VK_LOG(category, verbosity, __VA_ARGS__); } } while(0)
+#define VK_CLOG(condition, category, verbosity, format, ...) do { if((condition)) { VK_LOG(category, verbosity, format, __VA_ARGS__); } } while(0)
 
 namespace volkano {
 

@@ -58,6 +58,21 @@ struct default_stdout_sink : log_sink {
     }
 };
 
+auto verbosity_style(const log_verbosity verbosity)
+{
+    switch (verbosity) {
+        case log_verbosity::off:
+        case log_verbosity::critical:
+        case log_verbosity::error:
+        case log_verbosity::warning:
+        case log_verbosity::info:
+        case log_verbosity::debug:
+        case log_verbosity::verbose:
+        default:
+            return fmt::fg(fmt::color::white);
+    }
+}
+
 }
 
 log_category::log_category(const std::string_view name, const log_verbosity verbosity)
