@@ -16,8 +16,8 @@ list(FIND LOG_VERBOSITY_LIST ${VK_LOG_VERBOSITY} LOG_VERBOSITY_INDEX)
 
 message(STATUS "Log level: ${VK_LOG_VERBOSITY} (${LOG_VERBOSITY_INDEX})")
 if(${LOG_VERBOSITY_INDEX} EQUAL -1)
-    message(WARNING "Unknown log level, turning off logs")
-    list(FIND LOG_VERBOSITY_LIST "OFF" LOG_VERBOSITY_INDEX)
+    message(WARNING "Unknown log level, setting it to warning")
+    list(FIND LOG_VERBOSITY_LIST "WARNING" LOG_VERBOSITY_INDEX)
 endif()
 
 add_library(${PROJECT_NAME} STATIC
