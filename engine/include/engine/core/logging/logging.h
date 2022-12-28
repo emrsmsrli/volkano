@@ -13,33 +13,31 @@
 #include <vector>
 
 #include <fmt/format.h>
-#include <fmt/compile.h>
 
 #include "engine/core/int_types.h"
 #include "engine/core/platform.h"
 #include "engine/core/logging/logging_types.h"
 
-#ifndef VK_LOG_COMPILE_TIME_VERBOSITY
-  #define VK_LOG_COMPILE_TIME_VERBOSITY ::volkano::log_verbosity::warning
-#endif // VK_LOG_COMPILE_TIME_VERBOSITY
+#ifndef VKE_LOG_COMPILE_TIME_VERBOSITY
+  #define VKE_LOG_COMPILE_TIME_VERBOSITY ::volkano::log_verbosity::warning
+#endif // VKE_LOG_COMPILE_TIME_VERBOSITY
 
-#define VK_DECLARE_LOG_CATEGORY(name) extern ::volkano::log_category logcat_ ## name
-#define VK_DEFINE_LOG_CATEGORY(name, default_verbosity) ::volkano::log_category logcat_ ## name{#name, ::volkano::log_verbosity::default_verbosity} /*NOLINT cert-err58-cpp*/
-#define VK_DEFINE_LOG_CATEGORY_STATIC(name, default_verbosity) static VK_DEFINE_LOG_CATEGORY(name, default_verbosity)
+#define VKE_DECLARE_LOG_CATEGORY(name) extern ::volkano::log_category logcat_ ## name
+#define VKE_DEFINE_LOG_CATEGORY(name, default_verbosity) ::volkano::log_category logcat_ ## name{#name, ::volkano::log_verbosity::default_verbosity} /*NOLINT cert-err58-cpp*/
+#define VKE_DEFINE_LOG_CATEGORY_STATIC(name, default_verbosity) static VKE_DEFINE_LOG_CATEGORY(name, default_verbosity)
 
-#define VK_LOG(category, verbosity, format, ...)                                        \
-do {                                                                                    \
-    using namespace fmt::literals;                                                      \
-    constexpr auto v_current = ::volkano::log_verbosity::verbosity;                     \
-    constexpr auto v_allowed = ::volkano::log_verbosity{VK_LOG_COMPILE_TIME_VERBOSITY}; \
-    if constexpr(v_current <= v_allowed) {                                              \
-        ::volkano::logger::get().log(logcat_ ## category,                               \
-          v_current, std::source_location::current(),                                   \
-          format ## _cf __VA_OPT__(,) __VA_ARGS__);                                     \
-    }                                                                                   \
+#define VKE_LOG(category, verbosity, format, ...)                                        \
+do {                                                                                     \
+    constexpr auto v_current = ::volkano::log_verbosity::verbosity;                      \
+    constexpr auto v_allowed = ::volkano::log_verbosity{VKE_LOG_COMPILE_TIME_VERBOSITY}; \
+    if constexpr (v_current <= v_allowed) {                                              \
+        ::volkano::logger::get().log(logcat_ ## category,                                \
+          v_current, std::source_location::current(),                                    \
+          format __VA_OPT__(,) __VA_ARGS__);                                             \
+    }                                                                                    \
 } while(0)
 
-#define VK_CLOG(condition, category, verbosity, format, ...) do { if((condition)) { VK_LOG(category, verbosity, format, __VA_ARGS__); } } while(0)
+#define VKE_CLOG(condition, category, verbosity, format, ...) do { if((condition)) { VKE_LOG(category, verbosity, format, __VA_ARGS__); } } while(0)
 
 namespace volkano {
 
@@ -63,8 +61,7 @@ public:
         }
 
         log_buffer buffer;
-        const auto fmt_args = fmt::make_format_args(args...);
-        fmt::vformat_to(std::back_inserter(buffer), fmt, fmt_args);
+        fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
         const std::string_view user_log{buffer.data(), buffer.size()};
 
         log_internal(buffer, category, verbosity, src, user_log);
@@ -85,4 +82,4 @@ private:
 
 } // namespace volkano
 
-VK_DECLARE_LOG_CATEGORY(general);
+VKE_DECLARE_LOG_CATEGORY(general);

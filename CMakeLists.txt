@@ -25,13 +25,13 @@ if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-option(VK_ENABLE_TESTS "Enable Tests" OFF)
-option(VK_ENABLE_ASSERTIONS "Enable assertions" OFF)
+option(VKE_ENABLE_TESTS "Enable Tests" OFF)
+option(VKE_ENABLE_ASSERTIONS "Enable assertions" OFF)
 
 add_library(project_options INTERFACE)
 target_compile_definitions(project_options INTERFACE
-        VK_DEBUG=$<CONFIG:Debug>
-        $<$<BOOL:${VK_ENABLE_ASSERTIONS}>:VK_ENABLE_ASSERTIONS>)
+        VKE_DEBUG=$<CONFIG:Debug>
+        $<$<BOOL:${VKE_ENABLE_ASSERTIONS}>:VKE_ENABLE_ASSERTIONS>)
 
 find_package(fmt CONFIG REQUIRED)
 

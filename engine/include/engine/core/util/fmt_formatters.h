@@ -13,6 +13,7 @@
 
 #include <fmt/core.h>
 #include <fmt/chrono.h>
+#include <fmt/std.h>
 #include <magic_enum.hpp>
 
 template<typename T>
