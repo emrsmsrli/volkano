@@ -9,6 +9,7 @@
 
 #include <array>
 #include <algorithm>
+#include <concepts>
 #include <new>
 #include <utility>
 
@@ -31,11 +32,11 @@ private:
 
 public:
     template<typename T, typename... Args>
-        requires (std::is_constructible_v<T, Args...>)
+        requires std::constructible_from<T, Args...>
     constexpr T* construct(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
     {
         check_type<T>();
-        new (storage_.data()) T(std::forward<Args>(args)...);
+        std::construct_at(reinterpret_cast<T*>(storage_.data()), std::forward<Args>(args)...);
         return value<T>();
     }
 
@@ -44,8 +45,7 @@ public:
     {
         check_type<T>();
         if constexpr (!std::is_trivially_destructible_v<T>) {
-            T* data = value<T>();
-            data->~T();
+            std::destroy_at(value<T>());
         }
     }
 
@@ -60,7 +60,7 @@ public:
     constexpr const T* value() const noexcept
     {
         check_type<T>();
-        return std::launder(reinterpret_cast<T*>(storage_.data()));
+        return std::launder(reinterpret_cast<const T*>(storage_.data()));
     }
 
 private:

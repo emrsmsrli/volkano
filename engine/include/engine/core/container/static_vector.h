@@ -7,10 +7,11 @@
 
 #pragma once
 
+#include <algorithm>
 #include <concepts>
+#include <compare>
 #include <type_traits>
 #include <initializer_list>
-#include <new>
 
 #include "engine/core/int_types.h"
 #include "engine/core/assert.h"
@@ -57,45 +58,65 @@ public:
 
     constexpr ~static_vector() noexcept(std::is_nothrow_destructible_v<T>) { std::destroy(begin(), end()); }
 
-    constexpr static_vector(const static_vector&) noexcept(std::is_nothrow_copy_constructible_v<T>) = default;
-    constexpr static_vector& operator=(const static_vector&) noexcept(std::is_nothrow_copy_assignable_v<T>) = default;
+    constexpr static_vector(const static_vector& other)
+        noexcept(std::is_nothrow_copy_constructible_v<T>)
+        requires std::copyable<T>
+      : size_(other.size_)
+    {
+        std::uninitialized_copy(other.begin(), other.end(), begin());
+    }
 
-    template<usize OtherCapacity>
-        requires (Capacity >= OtherCapacity)
-    constexpr static_vector(static_vector<T, OtherCapacity>&& other) noexcept(std::is_nothrow_move_constructible_v<T>) // NOLINT(google-explicit-constructor)
-        : size_(std::exchange(other.size_, 0))
+    constexpr static_vector& operator=(const static_vector& other)
+      noexcept(std::is_nothrow_copy_assignable_v<T>)
+      requires std::copyable<T>
+    {
+        if (&other != this) {
+            size_ = other.size_;
+            std::uninitialized_copy(other.begin(), other.end(), begin());
+        }
+        return *this;
+    }
+
+    constexpr static_vector(static_vector&& other)
+        noexcept(std::is_nothrow_move_constructible_v<T>)
+        requires std::movable<T>
+      : size_(std::exchange(other.size_, 0))
     {
         std::uninitialized_move(other.begin(), other.begin() + size_, begin());
     }
 
-    template<usize OtherCapacity>
-        requires (Capacity >= OtherCapacity)
-    constexpr static_vector& operator=(static_vector<T, OtherCapacity>&& other) noexcept(std::is_nothrow_move_assignable_v<T>)
+    constexpr static_vector& operator=(static_vector&& other)
+        noexcept(std::is_nothrow_move_assignable_v<T>)
+        requires std::movable<T>
     {
-        size_ = std::exchange(other.size_, 0);
-        std::uninitialized_move(other.begin(), other.begin() + size_, begin());
+        if (&other != this) {
+            size_ = std::exchange(other.size_, 0);
+            std::uninitialized_move(other.begin(), other.begin() + size_, begin());
+        }
+        return *this;
     }
 
     constexpr static_vector(std::initializer_list<T> elems) noexcept(std::is_nothrow_copy_constructible_v<T>)
       : size_(elems.size())
     {
-        VK_ASSERT(size_ <= Capacity);
+        VKE_ASSERT(size_ <= Capacity);
         std::uninitialized_copy(elems.begin(), elems.end(), begin());
     };
 
     constexpr static_vector& operator=(std::initializer_list<T> elems) noexcept(std::is_nothrow_copy_assignable_v<T>)
     {
-        VK_ASSERT(elems.size() <= Capacity);
+        VKE_ASSERT(elems.size() <= Capacity);
         size_ = elems.size();
         std::uninitialized_copy(elems.begin(), elems.end(), begin());
+        return *this;
     }
 
     [[nodiscard]] constexpr T& operator[](const usize idx) noexcept { return *ptr(idx); }
     [[nodiscard]] constexpr const T& operator[](const usize idx) const noexcept { return *ptr(idx); }
     [[nodiscard]] constexpr T* ptr(const usize idx) noexcept { return storage_[idx].template value<T>(); }
     [[nodiscard]] constexpr const T* ptr(const usize idx) const noexcept { return storage_[idx].template value<T>(); }
-    [[nodiscard]] constexpr T& at(const usize idx) noexcept { VK_ASSERT(idx < size_); return *ptr(idx); }
-    [[nodiscard]] constexpr const T& at(const usize idx) const noexcept { VK_ASSERT(idx < size_); return *ptr(idx); }
+    [[nodiscard]] constexpr T& at(const usize idx) noexcept { VKE_ASSERT(idx < size_); return *ptr(idx); }
+    [[nodiscard]] constexpr const T& at(const usize idx) const noexcept { VKE_ASSERT(idx < size_); return *ptr(idx); }
     [[nodiscard]] constexpr T* data() noexcept { return ptr(0); }
     [[nodiscard]] constexpr const T* data() const noexcept { return ptr(0); }
 
@@ -103,20 +124,20 @@ public:
         requires std::constructible_from<T, Args...>
     constexpr T& emplace_back(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
     {
-        VK_ASSERT(size_ < Capacity);
+        VKE_ASSERT(size_ < Capacity);
         storage_[size_].template construct<T>(std::forward<Args>(args)...);
         return *ptr(size_++);
     }
 
     constexpr void push_back(const T& t) noexcept(std::is_nothrow_copy_constructible_v<T>)
     {
-        VK_ASSERT(size_ < Capacity);
+        VKE_ASSERT(size_ < Capacity);
         storage_[size_++].template construct<T>(t);
     }
 
     constexpr void push_back(T&& t) noexcept(std::is_nothrow_move_constructible_v<T>)
     {
-        VK_ASSERT(size_ < Capacity);
+        VKE_ASSERT(size_ < Capacity);
         storage_[size_++].template construct<T>(std::move(t));
     }
 
@@ -175,7 +196,22 @@ public:
     }
 };
 
-// todo implement equality/comparison operators
+template<typename T, usize Capacity>
+    requires std::equality_comparable<T>
+bool operator==(const static_vector<T, Capacity>& left, const static_vector<T, Capacity>& right)
+{
+    if (left.size() != right.size()) {
+        return false;
+    }
+    return std::equal(left.begin(), left.end(), right.begin(), right.end());
+}
+
+template<typename T, usize Capacity>
+    requires std::three_way_comparable<T>
+auto operator<=>(const static_vector<T, Capacity>& left, const static_vector<T, Capacity>& right)
+{
+    return std::lexicographical_compare_three_way(left.begin(), left.end(), right.begin(), right.end());
+}
 
 template<typename T, usize Capacity>
 constexpr void swap(static_vector<T, Capacity>& left, static_vector<T, Capacity>& right) noexcept(std::is_nothrow_swappable_v<T>)

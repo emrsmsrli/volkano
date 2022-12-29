@@ -9,9 +9,9 @@ cmake_minimum_required(VERSION 3.22)
 project(volkano_tests)
 
 find_package(doctest CONFIG REQUIRED)
-find_package(volkano REQUIRED)
 
 add_executable(${PROJECT_NAME}
+        engine/core/static_vector.cpp
         main.cpp)
 
 target_set_cxx_standard(${PROJECT_NAME} 20)
