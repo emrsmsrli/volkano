@@ -7,47 +7,37 @@
 
 #pragma once
 
-#include <algorithm>
+#include <ranges>
 #include <utility>
 
 namespace volkano::algo {
 
-template<typename Range, typename Elem>
-auto find(Range&& range, Elem&& elem) noexcept
+template<typename Iter, typename Elem, typename Projection = std::identity>
+decltype(auto) find_ptr(Iter begin, Iter end, const Elem& elem, const Projection& proj = {}) noexcept
 {
-    return std::find(range.begin(), range.end(), std::forward<Elem>(elem));
-}
-
-template<typename Range, typename Pred>
-auto find_if(Range&& range, Pred&& pred) noexcept
-{
-    return std::find_if(range.begin(), range.end(), std::forward<Pred>(pred));
-}
-
-template<typename Iter, typename Elem>
-decltype(auto) find_ptr(Iter begin, Iter end, Elem&& elem) noexcept
-{
-    const auto it = std::find(begin, end, std::forward<Elem>(elem));
+    const auto it = std::ranges::find(begin, end, elem, proj);
     return it == end ? nullptr : &*it;
 }
 
-template<typename Range, typename Pred>
-decltype(auto) find_ptr(Range&& range, Pred&& pred) noexcept
+template<typename Range, typename Elem, typename Projection = std::identity>
+decltype(auto) find_ptr(Range&& range, const Elem& elem, const Projection& proj = {}) noexcept
 {
-    return find_ptr(range.begin(), range.end(), std::forward<Pred>(pred));
+    const auto it = std::ranges::find(std::forward<Range>(range), elem, proj);
+    return it == range.end() ? nullptr : &*it;
 }
 
-template<typename Iter, typename Pred>
-decltype(auto) find_if_ptr(Iter begin, Iter end, Pred&& pred) noexcept
+template<typename Iter, typename Pred, typename Projection = std::identity>
+decltype(auto) find_if_ptr(Iter begin, Iter end, Pred pred, const Projection& proj = {}) noexcept
 {
-    const auto it = std::find_if(begin, end, std::forward<Pred>(pred));
+    const auto it = std::ranges::find_if(begin, end, pred, proj);
     return it == end ? nullptr : &*it;
 }
 
-template<typename Range, typename Pred>
-decltype(auto) find_if_ptr(Range&& range, Pred&& pred) noexcept
+template<typename Range, typename Pred, typename Projection = std::identity>
+decltype(auto) find_if_ptr(Range&& range, Pred pred, const Projection& proj = {}) noexcept
 {
-    return find_if_ptr(range.begin(), range.end(), std::forward<Pred>(pred));
+    const auto it = std::ranges::find_if(std::forward<Range>(range), pred, proj);
+    return it == range.end() ? nullptr : &*it;
 }
 
 } // namespace volkano::algo

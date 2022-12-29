@@ -7,37 +7,39 @@
 
 #pragma once
 
-#include <algorithm>
+#include <ranges>
 #include <utility>
 
 #include "engine/core/int_types.h"
 
 namespace volkano::algo {
 
-template<typename Iter, typename Elem>
-ptrdiff index_of(Iter begin, Iter end, Elem&& elem) noexcept
+template<typename Iter, typename Elem, typename Projection = std::identity>
+ptrdiff index_of(Iter begin, Iter end, const Elem& elem, const Projection& proj = {}) noexcept
 {
-    const auto iter = std::find(begin, end, std::forward<Elem>(elem));
-    return iter == end ? ptrdiff{-1} : std::distance(begin, iter);
+    const auto iter = std::ranges::find(begin, end, elem, proj);
+    return iter == end ? ptrdiff{-1} : std::ranges::distance(begin, iter);
 }
 
-template<typename Range, typename Elem>
-ptrdiff index_of(Range&& range, Elem&& elem) noexcept
+template<typename Range, typename Elem, typename Projection = std::identity>
+ptrdiff index_of(Range&& range, const Elem& elem, const Projection& proj = {}) noexcept
 {
-    return index_of(range.begin(), range.end(), std::forward<Elem>(elem));
+    const auto iter = std::ranges::find(std::forward<Range>(range), elem, proj);
+    return iter == range.end()? ptrdiff{-1} : std::ranges::distance(range.begin(), iter);
 }
 
-template<typename Iter, typename Pred>
-ptrdiff index_of_by_predicate(Iter begin, Iter end, Pred&& pred) noexcept
+template<typename Iter, typename Pred, typename Projection = std::identity>
+ptrdiff index_of_by_predicate(Iter begin, Iter end, Pred pred, const Projection& proj = {}) noexcept
 {
-    const auto iter = std::find_if(begin, end, std::forward<Pred>(pred));
-    return iter == end ? ptrdiff{-1} : std::distance(begin, iter);
+    const auto iter = std::ranges::find_if(begin, end, pred, proj);
+    return iter == end ? ptrdiff{-1} : std::ranges::distance(begin, iter);
 }
 
-template<typename Range, typename Pred>
-ptrdiff index_of_by_predicate(Range&& range, Pred&& pred) noexcept
+template<typename Range, typename Pred, typename Projection = std::identity>
+ptrdiff index_of_by_predicate(Range&& range, Pred pred, const Projection& proj = {}) noexcept
 {
-    return index_of_by_predicate(range.begin(), range.end(), std::forward<Pred>(pred));
+    const auto iter = std::ranges::find_if(std::forward<Range>(range), pred, proj);
+    return iter == range.end() ? ptrdiff{-1} : std::ranges::distance(range.begin(), iter);
 }
 
 } // namespace volkano::algo
