@@ -20,7 +20,7 @@ option(VKE_LOG_VERBOSITY "Log level: OFF, CRITICAL, ERROR, WARNING, INFO, DEBUG,
 set(LOG_VERBOSITY_LIST "OFF" "CRITICAL" "ERROR" "WARNING" "INFO" "DEBUG" "VERBOSE")
 list(FIND LOG_VERBOSITY_LIST ${VKE_LOG_VERBOSITY} LOG_VERBOSITY_INDEX)
 
-message(STATUS "Log level: ${VK_LOG_VERBOSITY} (${LOG_VERBOSITY_INDEX})")
+message(STATUS "Log level: ${VKE_LOG_VERBOSITY} (${LOG_VERBOSITY_INDEX})")
 if(${LOG_VERBOSITY_INDEX} EQUAL -1)
     message(WARNING "Unknown log level, setting it to warning")
     list(FIND LOG_VERBOSITY_LIST "WARNING" LOG_VERBOSITY_INDEX)
@@ -53,7 +53,8 @@ target_set_cxx_standard(${PROJECT_NAME} 20)
 target_set_warnings(${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME} PUBLIC VKE_LOG_COMPILE_TIME_VERBOSITY=${LOG_VERBOSITY_INDEX})
 target_precompile_headers(${PROJECT_NAME}
-        PUBLIC include/engine/volkano.h)
+        PUBLIC include/engine/volkano.h
+        PRIVATE <algorithm> <concepts> <type_traits> <cstdint> <cstddef> <memory> <ranges> )
 target_link_libraries(${PROJECT_NAME}
         PUBLIC fmt::fmt magic_enum::magic_enum
         PRIVATE Vulkan::Vulkan debugbreak::debugbreak)
