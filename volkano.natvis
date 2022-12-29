@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+Copyright (C) 2022 Emre Simsirli
+
+Licensed under GPLv3 or any later version.
+Refer to the included LICENSE file.
+-->
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="volkano::static_vector&lt;*&gt;">
+        <DisplayString>size={size_}</DisplayString>
+        <Expand>
+            <Item Name="[capacity]" ExcludeView="simple">$T2</Item>
+            <ArrayItems>
+              <Size>size_</Size>
+              <ValuePointer>($T1*)storage_</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+</AutoVisualizer>
