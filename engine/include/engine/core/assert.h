@@ -20,8 +20,9 @@ namespace volkano {
     #define VKE_ASSERT_MSG(predicate, ...)          \
       do {                                          \
           if(!(predicate)) {                        \
-              VKE_LOG(general, error,               \
+              VKE_LOG(general, critical,            \
                 "!(" #predicate "): " __VA_ARGS__); \
+              std::fflush(stdout);                  \
               debug_break();                        \
               std::terminate();                     \
           }                                         \
