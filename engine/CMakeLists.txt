@@ -38,12 +38,14 @@ add_library(${PROJECT_NAME}
         include/engine/core/algo/index_of.h
         include/engine/core/container/static_vector.h
         include/engine/core/event/delegate.h
+        include/engine/core/filesystem/filesystem.h
         include/engine/core/logging/logging.h
         include/engine/core/logging/logging_types.h
         include/engine/core/math/constants.h
         include/engine/core/math/math_helpers.h
         include/engine/core/memory/aligned_union.h
         include/engine/core/util/fmt_formatters.h
+        src/core/filesystem/filesystem.cpp
         src/core/logging/logging.cpp)
 
 target_include_directories(${PROJECT_NAME}
