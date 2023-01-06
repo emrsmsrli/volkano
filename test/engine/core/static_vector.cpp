@@ -9,6 +9,7 @@
 
 #include <doctest/doctest.h>
 
+#define VKE_ASSERT_MSG(predicate, ...) CHECK(predicate)
 #include "engine/core/container/static_vector.h"
 
 namespace {
@@ -71,7 +72,7 @@ TEST_CASE("static vector - size") {
     REQUIRE(v.size() == 0);
 }
 
-TEST_CASE("static vector - push more than capacity" * doctest::skip()) {
+TEST_CASE("static vector - push more than capacity" * doctest::should_fail()) {
     svector<int> v;
     v.push_back(1);
     v.push_back(1); // should step into debugger then terminate

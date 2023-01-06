@@ -16,20 +16,22 @@
 
 namespace volkano {
 
-#if DEBUG || defined(VKE_ENABLE_ASSERTIONS)
-    #define VKE_ASSERT_MSG(predicate, ...)          \
-      do {                                          \
-          if(!(predicate)) {                        \
-              VKE_LOG(general, critical,            \
-                "!(" #predicate "): " __VA_ARGS__); \
-              std::fflush(stdout);                  \
-              debug_break();                        \
-              std::terminate();                     \
-          }                                         \
-      } while(0)
-#else
-  #define VKE_ASSERT_MSG(...) void(0)
-#endif // DEBUG || defined(VKE_ENABLE_ASSERTIONS)
+#ifndef VKE_ASSERT_MSG
+  #if DEBUG || defined(VKE_ENABLE_ASSERTIONS)
+      #define VKE_ASSERT_MSG(predicate, ...)          \
+        do {                                          \
+            if(!(predicate)) {                        \
+                VKE_LOG(general, critical,            \
+                  "!(" #predicate "): " __VA_ARGS__); \
+                std::fflush(stdout);                  \
+                debug_break();                        \
+                std::terminate();                     \
+            }                                         \
+        } while(0)
+  #else
+    #define VKE_ASSERT_MSG(...) void(0)
+  #endif // DEBUG || defined(VKE_ENABLE_ASSERTIONS)
+#endif // ifndef VKE_ASSERT_MSG
 
 #define VKE_ASSERT(predicate) VKE_ASSERT_MSG(predicate, "assertion failed")
 
