@@ -17,7 +17,7 @@ VKE_DEFINE_LOG_CATEGORY_STATIC(fs, warning);
 
 namespace volkano::fs {
 
-std::vector<u8> read_file(const path& path)
+std::vector<u8> read_bytes_from_file(const path& path)
 {
     const fs::path actual_path = path.is_absolute() ? path : absolute(path);
     std::ifstream stream{actual_path, std::ios::binary};
@@ -38,7 +38,7 @@ std::vector<u8> read_file(const path& path)
     return bytes;
 }
 
-void write_file(const path& path, const std::span<const u8> data)
+void write_bytes_to_file(const path& path, std::span<const u8> data)
 {
     const fs::path actual_path = path.is_absolute() ? path : std::filesystem::current_path() / path;
     std::ofstream stream{actual_path, std::ios::binary};
@@ -48,9 +48,9 @@ void write_file(const path& path, const std::span<const u8> data)
     VKE_LOG(fs, verbose, "wrote {} bytes to {}", data.size(), actual_path.string());
 }
 
-void write_file(const path& path, const std::vector<u8>& data)
+void write_bytes_to_file(const path& path, const std::vector<u8>& data)
 {
-    write_file(path, std::span<const u8>{data.data(), data.size()});
+    write_bytes_to_file(path, std::span<const u8>{data.data(), data.size()});
 }
 
 } // namespace volkano::fs
