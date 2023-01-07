@@ -66,13 +66,6 @@ enable_sanitizers(${PROJECT_NAME})
 if(MSVC)
     # Don't use the legacy preprocessor
     target_compile_options(${PROJECT_NAME} PUBLIC /Zc:preprocessor)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC
-            PLATFORM_WIN32=1
-            PLATFORM_UNIX=0)
-else()
-    target_compile_definitions(${PROJECT_NAME} PUBLIC
-            PLATFORM_WIN32=0
-            PLATFORM_UNIX=1)
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC DEBUG=$<IF:$<CONFIG:Debug>,1,0>)
