@@ -24,12 +24,15 @@ template<typename T, usize Capacity>
 class static_vector {
     static_assert(Capacity != 0, "Vector capacity must not be zero");
 
+public:
+    using size_type = std::conditional_t<(Capacity > std::numeric_limits<u32>::max()), usize, u32>;
+
+private:
     aligned_union<T> storage_[Capacity];
-    usize size_ = 0;
+    size_type size_ = 0;
 
 public:
     using value_type = T;
-    using size_type = usize;
     using reference = value_type&;
     using const_reference = const value_type&;
     using pointer = T*;
@@ -40,7 +43,7 @@ public:
     using const_reverse_iterator = typename std::array<T, Capacity>::const_reverse_iterator;
 
     constexpr static_vector() noexcept = default;
-    constexpr explicit static_vector(const usize size)
+    constexpr explicit static_vector(const size_type size)
         noexcept(std::is_nothrow_default_constructible_v<T>)
         requires std::default_initializable<T>
       : size_(size)
@@ -48,7 +51,7 @@ public:
         std::uninitialized_default_construct(begin(), end());
     }
 
-    constexpr static_vector(const usize size, const T& value)
+    constexpr static_vector(const size_type size, const T& value)
         noexcept(std::is_nothrow_copy_constructible_v<T>)
         requires std::copy_constructible<T>
       : size_(size)
@@ -111,12 +114,12 @@ public:
         return *this;
     }
 
-    [[nodiscard]] constexpr T& operator[](const usize idx) noexcept { return *ptr(idx); }
-    [[nodiscard]] constexpr const T& operator[](const usize idx) const noexcept { return *ptr(idx); }
-    [[nodiscard]] constexpr T* ptr(const usize idx) noexcept { return storage_[idx].template value<T>(); }
-    [[nodiscard]] constexpr const T* ptr(const usize idx) const noexcept { return storage_[idx].template value<T>(); }
-    [[nodiscard]] constexpr T& at(const usize idx) noexcept { VKE_ASSERT(idx < size_); return *ptr(idx); }
-    [[nodiscard]] constexpr const T& at(const usize idx) const noexcept { VKE_ASSERT(idx < size_); return *ptr(idx); }
+    [[nodiscard]] constexpr T& operator[](const size_type idx) noexcept { return *ptr(idx); }
+    [[nodiscard]] constexpr const T& operator[](const size_type idx) const noexcept { return *ptr(idx); }
+    [[nodiscard]] constexpr T* ptr(const size_type idx) noexcept { return storage_[idx].template value<T>(); }
+    [[nodiscard]] constexpr const T* ptr(const size_type idx) const noexcept { return storage_[idx].template value<T>(); }
+    [[nodiscard]] constexpr T& at(const size_type idx) noexcept { VKE_ASSERT(idx < size_); return *ptr(idx); }
+    [[nodiscard]] constexpr const T& at(const size_type idx) const noexcept { VKE_ASSERT(idx < size_); return *ptr(idx); }
     [[nodiscard]] constexpr T* data() noexcept { return ptr(0); }
     [[nodiscard]] constexpr const T* data() const noexcept { return ptr(0); }
 
@@ -142,9 +145,9 @@ public:
     }
 
     [[nodiscard]] constexpr bool empty() const noexcept { return size_ == 0; }
-    [[nodiscard]] constexpr usize size() const noexcept { return size_; }
-    [[nodiscard]] constexpr usize max_size() const noexcept { return Capacity; }
-    [[nodiscard]] constexpr usize capacity() const noexcept { return Capacity; }
+    [[nodiscard]] constexpr size_type size() const noexcept { return size_; }
+    [[nodiscard]] constexpr size_type max_size() const noexcept { return Capacity; }
+    [[nodiscard]] constexpr size_type capacity() const noexcept { return Capacity; }
 
     constexpr T& front() noexcept { return at(0); }
     constexpr const T& front() const noexcept { return at(0); }
@@ -155,7 +158,7 @@ public:
     {
         std::destroy(first, last);
         std::rotate(first, last, end());
-        size_ -= static_cast<usize>(std::distance(first, last));
+        size_ -= static_cast<size_type>(std::distance(first, last));
     }
 
     constexpr void erase(iterator iter) noexcept
