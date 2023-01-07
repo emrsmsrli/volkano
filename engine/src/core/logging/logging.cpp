@@ -13,10 +13,11 @@
 #include <fmt/color.h>
 #include <fmt/ostream.h>
 
+#include "engine/core/platform.h"
 #include "engine/core/algo/find.h"
 #include "engine/core/util/fmt_formatters.h"
 
-VK_DEFINE_LOG_CATEGORY(general, info);
+VKE_DEFINE_LOG_CATEGORY(general, info);
 
 namespace volkano {
 
@@ -58,21 +59,6 @@ struct default_stdout_sink : log_sink {
     }
 };
 
-auto verbosity_style(const log_verbosity verbosity)
-{
-    switch (verbosity) {
-        case log_verbosity::off:
-        case log_verbosity::critical:
-        case log_verbosity::error:
-        case log_verbosity::warning:
-        case log_verbosity::info:
-        case log_verbosity::debug:
-        case log_verbosity::verbose:
-        default:
-            return fmt::fg(fmt::color::white);
-    }
-}
-
 }
 
 log_category::log_category(const std::string_view name, const log_verbosity verbosity)
@@ -102,7 +88,7 @@ void logger::set_category_verbosity(const std::string_view category_name, const 
 
 log_category* logger::find_category_by_name(const std::string_view name) noexcept
 {
-    const auto it = algo::find_if(categories_, [name](const log_category* cat) { return name == cat->name(); });
+    const auto it = std::ranges::find_if(categories_, [name](const log_category* cat) { return name == cat->name(); });
     return it == categories_.end() ? nullptr : *it;
 }
 
@@ -119,7 +105,7 @@ void logger::log_internal(logger::log_buffer& buffer, const log_category& catego
     constexpr const char path_separator = '\\';
 #elif PLATFORM_UNIX
     constexpr const char path_separator = '/';
-#endif
+#endif // PLATFORM
 
     std::string_view file_name = src.file_name();
     const auto file_start = file_name.find_last_of(path_separator);
@@ -128,9 +114,9 @@ void logger::log_internal(logger::log_buffer& buffer, const log_category& catego
     }
 
     const auto now = std::chrono::system_clock::now();
-    fmt::format_to(std::back_inserter(buffer), "[{:%H:%M}:{:%S}][{}][{}:{}:{}][{}][{}]: {}\n",
+    fmt::format_to(std::back_inserter(buffer), "[{:%H:%M}:{:%S}][{}][{}:{}][{}][{}]: {}\n",
       now, now.time_since_epoch(), std::this_thread::get_id(),
-      file_name, src.line(), src.function_name(), category.name(), verbosity, user_log);
+      file_name, src.line(), category.name(), verbosity, user_log);
 
     const std::string_view log{buffer.begin() + user_log.size(), buffer.size() - user_log.size()};
     for (const auto& sink: sinks_) {
