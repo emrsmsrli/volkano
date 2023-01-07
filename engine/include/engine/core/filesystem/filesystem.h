@@ -16,7 +16,7 @@
 
 namespace volkano::fs {
 
-using std::filesystem::path;
+using namespace std::filesystem;
 
 std::vector<u8> read_file(const path& path);
 void write_file(const path& path, const std::vector<u8>& data);
