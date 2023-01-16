@@ -100,7 +100,7 @@ public:
     }
 
     constexpr static_vector(std::initializer_list<T> elems) noexcept(std::is_nothrow_copy_constructible_v<T>)
-      : size_(elems.size())
+      : size_(static_cast<size_type>(elems.size()))
     {
         VKE_ASSERT(size_ <= Capacity);
         std::uninitialized_copy(elems.begin(), elems.end(), begin());
@@ -109,7 +109,7 @@ public:
     constexpr static_vector& operator=(std::initializer_list<T> elems) noexcept(std::is_nothrow_copy_assignable_v<T>)
     {
         VKE_ASSERT(elems.size() <= Capacity);
-        size_ = elems.size();
+        size_ = static_cast<size_type>(elems.size());
         std::uninitialized_copy(elems.begin(), elems.end(), begin());
         return *this;
     }
