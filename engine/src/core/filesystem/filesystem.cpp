@@ -24,10 +24,7 @@ std::vector<u8> read_bytes_from_file(const path& path)
     VKE_ASSERT_MSG(stream.is_open(), "input file stream could not be opened: {}", actual_path.string());
 
     std::vector<u8> bytes;
-    {
-        const auto size = file_size(actual_path);
-        bytes.resize(size);
-    }
+    bytes.resize(file_size(actual_path));
 
     std::copy(
       std::istreambuf_iterator<char>{stream},
