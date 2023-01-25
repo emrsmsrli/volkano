@@ -36,6 +36,7 @@ struct default_stdout_sink : log_sink {
     void sink(const log_verbosity verbosity, const std::string_view log) override
     {
         fmt::print(verbosity_style(verbosity), "{}", log);
+        std::fflush(stdout);
     }
 
     static fmt::text_style verbosity_style(const log_verbosity verbosity)
