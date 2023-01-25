@@ -12,7 +12,9 @@ configure_file(cmake/volkano_version.in
         ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/version.h)
 
 find_package(magic_enum CONFIG REQUIRED)
-find_package(Vulkan REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
+find_package(Vulkan REQUIRED COMPONENTS glslc)
+find_program(glslc_executable NAMES glslc HINTS Vulkan::glslc)
 
 include(SetTargetStandard)
 
@@ -43,10 +45,17 @@ add_library(${PROJECT_NAME}
         include/engine/core/logging/logging_types.h
         include/engine/core/math/constants.h
         include/engine/core/math/math_helpers.h
+        include/engine/core/math/vec2.h
         include/engine/core/memory/aligned_union.h
         include/engine/core/util/fmt_formatters.h
+        include/engine/renderer/null_renderer.h
+        include/engine/renderer/renderer_interface.h
+        include/engine/renderer/vk_include.h
+        include/engine/renderer/vk_renderer.h
+        src/volkano.cpp
         src/core/filesystem/filesystem.cpp
-        src/core/logging/logging.cpp)
+        src/core/logging/logging.cpp
+        src/renderer/vk_renderer.cpp)
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE src/
@@ -56,10 +65,10 @@ target_set_warnings(${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME} PUBLIC VKE_LOG_COMPILE_TIME_VERBOSITY=${LOG_VERBOSITY_INDEX})
 target_precompile_headers(${PROJECT_NAME}
         PUBLIC include/engine/volkano.h
-        PRIVATE <algorithm> <concepts> <type_traits> <cstdint> <cstddef> <memory> <ranges> )
+        PRIVATE <algorithm> <concepts> <type_traits> <cstdint> <cstddef> <memory> <ranges>)
 target_link_libraries(${PROJECT_NAME}
         PUBLIC fmt::fmt magic_enum::magic_enum
-        PRIVATE Vulkan::Vulkan debugbreak::debugbreak)
+        PRIVATE Vulkan::Vulkan debugbreak::debugbreak SDL2::SDL2-static)
 
 enable_sanitizers(${PROJECT_NAME})
 
@@ -71,3 +80,22 @@ endif()
 target_compile_definitions(${PROJECT_NAME} PUBLIC DEBUG=$<IF:$<CONFIG:Debug>,1,0>)
 
 add_library(volkano::engine ALIAS ${PROJECT_NAME})
+
+set(SHADER_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders CACHE PATH "engine shader path")
+set(SHADER_BINARIES)
+set(SHADER_SOURCES
+        ${SHADER_SRC_DIR}/triangle.vert
+        ${SHADER_SRC_DIR}/triangle.frag)
+
+foreach(SOURCE ${SHADER_SOURCES})
+    get_filename_component(SOURCE_FILENAME ${SOURCE} NAME)
+    set(BINARY ${CMAKE_CURRENT_BINARY_DIR}/shaders/${SOURCE_FILENAME}.spr)
+    add_custom_command(OUTPUT ${BINARY}
+            COMMAND  ${glslc_executable} ${SOURCE} -o ${BINARY}
+            DEPENDS ${SOURCE}
+            COMMENT "Compiling ${SOURCE}")
+    list(APPEND SHADER_BINARIES ${BINARY})
+endforeach()
+
+add_custom_target(shader_compile ALL DEPENDS ${SHADER_BINARIES})
+add_dependencies(${PROJECT_NAME} shader_compile)

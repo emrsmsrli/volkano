@@ -5,10 +5,11 @@
  * Refer to the included LICENSE file.
  */
 
-#include <iostream>
+#include "engine/volkano.h"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
-    std::cout << "Hello Volkano\n";
+    volkano::engine engine;
+    while (engine.tick()) {}
     return 0;
 }
