@@ -16,6 +16,19 @@
 
 namespace volkano {
 
+[[noreturn]] inline void unreachable()
+{
+    // from cppreference
+    // Uses compiler specific extensions if possible.
+    // Even if no extension is used, undefined behavior is still raised by
+    // an empty function body and the noreturn attribute.
+#if defined(__GNUC__) // GCC, Clang, ICC
+    __builtin_unreachable();
+#elif defined(_MSC_VER) // MSVC
+    __assume(false);
+#endif
+}
+
 #ifndef VKE_ASSERT_MSG
   #if DEBUG || defined(VKE_ENABLE_ASSERTIONS)
       #define VKE_ASSERT_MSG(predicate, ...)          \
