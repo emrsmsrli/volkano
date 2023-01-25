@@ -154,28 +154,39 @@ public:
     constexpr T& back() noexcept { return at(size() - 1); }
     constexpr const T& back() const noexcept { return at(size() - 1); }
 
-    constexpr void erase(iterator first, iterator last) noexcept
+    constexpr void erase(iterator first, iterator last) noexcept(std::is_nothrow_destructible_v<T>)
     {
         std::destroy(first, last);
         std::rotate(first, last, end());
         size_ -= static_cast<size_type>(std::distance(first, last));
     }
 
-    constexpr void erase(iterator iter) noexcept
+    constexpr void erase(iterator iter) noexcept(std::is_nothrow_destructible_v<T>)
     {
         erase(iter, iter + 1);
     }
 
-    constexpr void pop_back() noexcept
+    constexpr void pop_back() noexcept(std::is_nothrow_destructible_v<T>)
     {
         std::destroy(end() - 1, end());
         --size_;
     }
 
-    constexpr void clear() noexcept
+    constexpr void clear() noexcept(std::is_nothrow_destructible_v<T>)
     {
         std::destroy(begin(), end());
         size_ = 0;
+    }
+
+    constexpr void resize(const size_type new_size) noexcept(std::is_nothrow_default_constructible_v<T>)
+    {
+        if (new_size > size_) {
+            VKE_ASSERT(new_size < Capacity);
+            std::uninitialized_default_construct_n(end(), new_size - size_);
+        } else {
+            std::destroy(begin() + new_size, end());
+        }
+        size_ = new_size;
     }
 
     constexpr iterator begin() noexcept { return iterator{ptr(0)}; }
@@ -201,7 +212,7 @@ public:
 
 template<typename T, usize Capacity>
     requires std::equality_comparable<T>
-bool operator==(const static_vector<T, Capacity>& left, const static_vector<T, Capacity>& right)
+bool operator==(const static_vector<T, Capacity>& left, const static_vector<T, Capacity>& right) noexcept
 {
     if (left.size() != right.size()) {
         return false;
@@ -211,7 +222,7 @@ bool operator==(const static_vector<T, Capacity>& left, const static_vector<T, C
 
 template<typename T, usize Capacity>
     requires std::three_way_comparable<T>
-auto operator<=>(const static_vector<T, Capacity>& left, const static_vector<T, Capacity>& right)
+auto operator<=>(const static_vector<T, Capacity>& left, const static_vector<T, Capacity>& right) noexcept
 {
     return std::lexicographical_compare_three_way(left.begin(), left.end(), right.begin(), right.end());
 }
