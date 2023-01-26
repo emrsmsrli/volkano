@@ -8,8 +8,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iterator>
-
-#include <range/v3/algorithm/copy.hpp>
+#include <ranges>
 
 #include "engine/core/filesystem/filesystem.h"
 #include "engine/core/assert.h"
@@ -42,7 +41,7 @@ void write_bytes_to_file(const path& path, std::span<const u8> data)
     std::ofstream stream{actual_path, std::ios::binary};
     VKE_ASSERT_MSG(stream.is_open(), "output file stream could not be opened: {}", actual_path.string());
 
-    ranges::copy(data, std::ostreambuf_iterator<char>(stream));
+    std::ranges::copy(data, std::ostreambuf_iterator<char>(stream));
     VKE_LOG(fs, verbose, "wrote {} bytes to {}", data.size(), actual_path.string());
 }
 

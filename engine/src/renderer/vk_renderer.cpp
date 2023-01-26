@@ -7,8 +7,6 @@
 
 #include <SDL2/SDL_vulkan.h>
 
-#include <range/v3/algorithm/find_if.hpp>
-
 #include "engine/renderer/vk_renderer.h"
 #include "engine/version.h"
 #include "engine/core/algo/contains.h"
@@ -183,7 +181,7 @@ void vk_renderer::cache_physical_devices() noexcept
     VKE_LOG(vulkan, verbose, "available physical devices:\n\t{}", fmt::join(physical_devices_, "\n\t"));
 
     // todo rate and sort devices instead of this based on type, max limits, and queue family availability, (possibly other stuff too)
-    const auto found_it = ranges::find_if(physical_devices_, &vk_renderer::is_phys_device_suitable);
+    const auto found_it = std::ranges::find_if(physical_devices_, &vk_renderer::is_phys_device_suitable);
     VKE_ASSERT_MSG(found_it != physical_devices_.end(), "no suitable physical device was found to run vulkan");
 
     switch_physical_device_to(*found_it);

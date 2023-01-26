@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <ranges>
+
 #define VULKAN_HPP_ASSERT_ON_RESULT(...)
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #define VULKAN_HPP_NO_SETTERS
