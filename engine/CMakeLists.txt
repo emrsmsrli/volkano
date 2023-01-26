@@ -11,6 +11,7 @@ project(volkano VERSION 0.0.1 DESCRIPTION "a vulkan based engine" LANGUAGES CXX)
 configure_file(cmake/volkano_version.in
         ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/version.h)
 
+find_package(range-v3 CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(Vulkan REQUIRED COMPONENTS glslc)
@@ -65,10 +66,10 @@ target_set_warnings(${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME} PUBLIC VKE_LOG_COMPILE_TIME_VERBOSITY=${LOG_VERBOSITY_INDEX})
 target_precompile_headers(${PROJECT_NAME}
         PUBLIC include/engine/volkano.h
-        PRIVATE <algorithm> <concepts> <type_traits> <cstdint> <cstddef> <memory> <ranges>)
+        PRIVATE <algorithm> <concepts> <type_traits> <cstdint> <cstddef> <memory>)
 target_link_libraries(${PROJECT_NAME}
         PUBLIC fmt::fmt magic_enum::magic_enum
-        PRIVATE Vulkan::Vulkan debugbreak::debugbreak SDL2::SDL2-static)
+        PRIVATE Vulkan::Vulkan debugbreak::debugbreak SDL2::SDL2-static range-v3::concepts)
 
 enable_sanitizers(${PROJECT_NAME})
 
