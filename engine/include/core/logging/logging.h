@@ -14,9 +14,9 @@
 
 #include <fmt/format.h>
 
-#include "engine/core/int_types.h"
-#include "engine/core/platform.h"
-#include "engine/core/logging/logging_types.h"
+#include "core/int_types.h"
+#include "core/platform.h"
+#include "logging_types.h"
 
 #ifndef VKE_LOG_COMPILE_TIME_VERBOSITY
   #define VKE_LOG_COMPILE_TIME_VERBOSITY ::volkano::log_verbosity::warning

@@ -13,8 +13,8 @@
 #include <new>
 #include <utility>
 
-#include "engine/core/int_types.h"
-#include "engine/core/type_traits.h"
+#include "core/int_types.h"
+#include "core/type_traits.h"
 
 namespace volkano {
 

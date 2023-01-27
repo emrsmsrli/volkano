@@ -5,7 +5,7 @@
  * Refer to the included LICENSE file.
  */
 
-#include "engine/volkano.h"
+#include "volkano.h"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {

@@ -11,8 +11,8 @@
 #include <span>
 #include <vector>
 
-#include "engine/core/platform.h"
-#include "engine/core/int_types.h"
+#include "core/platform.h"
+#include "core/int_types.h"
 
 namespace volkano::fs {
 

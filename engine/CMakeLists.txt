@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 3.22)
 project(volkano VERSION 0.0.1 DESCRIPTION "a vulkan based engine" LANGUAGES CXX)
 
 configure_file(cmake/volkano_version.in
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/version.h)
+        include/version.h)
 
 find_package(magic_enum CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
@@ -29,29 +29,29 @@ if(${LOG_VERBOSITY_INDEX} EQUAL -1)
 endif()
 
 add_library(${PROJECT_NAME}
-        include/engine/volkano.h
-        include/engine/version.h
-        include/engine/core/assert.h
-        include/engine/core/int_types.h
-        include/engine/core/platform.h
-        include/engine/core/type_traits.h
-        include/engine/core/algo/contains.h
-        include/engine/core/algo/find.h
-        include/engine/core/algo/index_of.h
-        include/engine/core/container/static_vector.h
-        include/engine/core/event/delegate.h
-        include/engine/core/filesystem/filesystem.h
-        include/engine/core/logging/logging.h
-        include/engine/core/logging/logging_types.h
-        include/engine/core/math/constants.h
-        include/engine/core/math/math_helpers.h
-        include/engine/core/math/vec2.h
-        include/engine/core/memory/aligned_union.h
-        include/engine/core/util/fmt_formatters.h
-        include/engine/renderer/null_renderer.h
-        include/engine/renderer/renderer_interface.h
-        include/engine/renderer/vk_include.h
-        include/engine/renderer/vk_renderer.h
+        include/volkano.h
+        include/version.h
+        include/core/assert.h
+        include/core/int_types.h
+        include/core/platform.h
+        include/core/type_traits.h
+        include/core/algo/contains.h
+        include/core/algo/find.h
+        include/core/algo/index_of.h
+        include/core/container/static_vector.h
+        include/core/event/delegate.h
+        include/core/filesystem/filesystem.h
+        include/core/logging/logging.h
+        include/core/logging/logging_types.h
+        include/core/math/constants.h
+        include/core/math/math_helpers.h
+        include/core/math/vec2.h
+        include/core/memory/aligned_union.h
+        include/core/util/fmt_formatters.h
+        include/renderer/null_renderer.h
+        include/renderer/renderer_interface.h
+        include/renderer/vk_include.h
+        include/renderer/vk_renderer.h
         src/volkano.cpp
         src/core/filesystem/filesystem.cpp
         src/core/logging/logging.cpp
@@ -64,7 +64,7 @@ target_set_cxx_standard(${PROJECT_NAME} 20)
 target_set_warnings(${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME} PUBLIC VKE_LOG_COMPILE_TIME_VERBOSITY=${LOG_VERBOSITY_INDEX})
 target_precompile_headers(${PROJECT_NAME}
-        PUBLIC include/engine/volkano.h
+        PUBLIC include/volkano.h
         PRIVATE <algorithm> <concepts> <type_traits> <cstdint> <cstddef> <memory> <ranges>)
 target_link_libraries(${PROJECT_NAME}
         PUBLIC fmt::fmt magic_enum::magic_enum

@@ -11,8 +11,8 @@
 
 #include "debugbreak.h"
 
-#include "engine/core/int_types.h"
-#include "engine/core/logging/logging.h"
+#include "int_types.h"
+#include "core/logging/logging.h"
 
 namespace volkano {
 

@@ -13,9 +13,9 @@
 #include <type_traits>
 #include <initializer_list>
 
-#include "engine/core/int_types.h"
-#include "engine/core/assert.h"
-#include "engine/core/memory/aligned_union.h"
+#include "core/int_types.h"
+#include "core/assert.h"
+#include "core/memory/aligned_union.h"
 
 namespace volkano {
 

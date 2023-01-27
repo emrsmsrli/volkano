@@ -10,7 +10,7 @@
 #include <ranges>
 #include <utility>
 
-#include "engine/core/int_types.h"
+#include "core/int_types.h"
 
 namespace volkano::algo {
 

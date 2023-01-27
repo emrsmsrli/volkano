@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Emre Simsirli
+ * Copyright (C) 2023 Emre Simsirli
  *
  * Licensed under GPLv3 or any later version.
  * Refer to the included LICENSE file.
@@ -9,7 +9,7 @@
 
 #include <string_view>
 
-#include "engine/core/int_types.h"
+#include "core/int_types.h"
 
 namespace volkano {
 

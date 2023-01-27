@@ -5,7 +5,7 @@
  * Refer to the included LICENSE file.
  */
 
-#include "engine/core/logging/logging.h"
+#include "core/logging/logging.h"
 
 #include <thread>
 
@@ -13,9 +13,9 @@
 #include <fmt/color.h>
 #include <fmt/ostream.h>
 
-#include "engine/core/platform.h"
-#include "engine/core/algo/find.h"
-#include "engine/core/util/fmt_formatters.h"
+#include "core/platform.h"
+#include "core/algo/find.h"
+#include "core/util/fmt_formatters.h"
 
 VKE_DEFINE_LOG_CATEGORY(general, info);
 

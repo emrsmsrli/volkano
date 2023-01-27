@@ -10,7 +10,7 @@
 #include <doctest/doctest.h>
 
 #define VKE_ASSERT_MSG(predicate, ...) CHECK(predicate)
-#include "engine/core/container/static_vector.h"
+#include "core/container/static_vector.h"
 
 namespace {
 

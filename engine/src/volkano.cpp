@@ -8,9 +8,9 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 
-#include "engine/volkano.h"
-#include "engine/core/util/variant_visit_nt.h"
-#include "engine/renderer/vk_renderer.h"
+#include "volkano.h"
+#include "core/util/variant_visit_nt.h"
+#include "renderer/vk_renderer.h"
 
 VKE_DEFINE_LOG_CATEGORY_STATIC(engine, verbose);
 

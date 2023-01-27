@@ -10,8 +10,8 @@
 #include <iterator>
 #include <ranges>
 
-#include "engine/core/filesystem/filesystem.h"
-#include "engine/core/assert.h"
+#include "core/filesystem/filesystem.h"
+#include "core/assert.h"
 
 VKE_DEFINE_LOG_CATEGORY_STATIC(fs, warning);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Emre Simsirli
+ * Copyright (C) 2023 Emre Simsirli
  *
  * Licensed under GPLv3 or any later version.
  * Refer to the included LICENSE file.
@@ -12,9 +12,9 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_events.h>
 
-#include "engine/core/int_types.h"
-#include "engine/core/math/vec2.h"
-#include "engine/renderer/renderer_interface.h"
+#include "core/int_types.h"
+#include "core/math/vec2.h"
+#include "renderer/renderer_interface.h"
 
 namespace volkano {
 

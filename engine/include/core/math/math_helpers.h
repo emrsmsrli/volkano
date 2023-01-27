@@ -10,8 +10,8 @@
 #include <concepts>
 #include <cmath>
 
-#include "engine/core/int_types.h"
-#include "engine/core/math/constants.h"
+#include "core/int_types.h"
+#include "constants.h"
 
 namespace volkano::math {
 

@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "engine/core/assert.h"
-#include "engine/core/math/math_helpers.h"
+#include "core/assert.h"
+#include "math_helpers.h"
 
 namespace volkano {
 

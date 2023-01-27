@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "engine/renderer/renderer_interface.h"
+#include "renderer_interface.h"
 
 namespace volkano {
 

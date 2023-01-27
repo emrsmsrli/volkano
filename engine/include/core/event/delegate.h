@@ -11,7 +11,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "engine/core/type_traits.h"
+#include "core/type_traits.h"
 
 namespace volkano {
 

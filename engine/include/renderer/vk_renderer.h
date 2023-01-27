@@ -9,10 +9,10 @@
 
 #include <vector>
 
-#include "engine/renderer/vk_include.h" // todo vulkan_handles.hpp
-#include "engine/renderer/renderer_interface.h"
-#include "engine/core/logging/logging.h"
-#include "engine/core/filesystem/filesystem.h"
+#include "vk_include.h" // todo vulkan_handles.hpp
+#include "renderer_interface.h"
+#include "core/logging/logging.h"
+#include "core/filesystem/filesystem.h"
 
 VKE_DECLARE_LOG_CATEGORY(vulkan);
 VKE_DECLARE_LOG_CATEGORY(renderer);

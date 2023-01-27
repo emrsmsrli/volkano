@@ -7,12 +7,12 @@
 
 #include <SDL2/SDL_vulkan.h>
 
-#include "engine/renderer/vk_renderer.h"
-#include "engine/version.h"
-#include "engine/core/algo/contains.h"
-#include "engine/core/container/static_vector.h"
-#include "engine/core/util/fmt_formatters.h"
-#include "engine/core/algo/index_of.h"
+#include "renderer/vk_renderer.h"
+#include "version.h"
+#include "core/algo/contains.h"
+#include "core/container/static_vector.h"
+#include "core/util/fmt_formatters.h"
+#include "core/algo/index_of.h"
 
 VKE_DEFINE_LOG_CATEGORY(vulkan, verbose);
 VKE_DEFINE_LOG_CATEGORY(renderer, verbose);

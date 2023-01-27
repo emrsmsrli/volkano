@@ -16,8 +16,8 @@
 #include <vulkan/vulkan.hpp>
 #include <fmt/format.h>
 
-#include "engine/core/assert.h"
-#include "engine/core/algo/contains.h"
+#include "core/assert.h"
+#include "core/algo/contains.h"
 
 template<>
 struct fmt::formatter<vk::ExtensionProperties> : formatter<std::string>
