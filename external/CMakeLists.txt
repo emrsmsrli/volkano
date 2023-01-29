@@ -20,5 +20,4 @@ endfunction()
 add_header_only_library(debugbreak)
 
 add_subdirectory(imgui)
-# add_subdirectory(fmt)
-# add_subdirectory(spdlog)
+add_subdirectory(vma-hpp)

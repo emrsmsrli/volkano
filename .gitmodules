@@ -1,0 +1,3 @@
+[submodule "vma-hpp"]
+	path = external/vma-hpp
+	url = https://github.com/emrsmsrli/vma-hpp.git
