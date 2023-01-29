@@ -14,6 +14,7 @@
 #define VULKAN_HPP_NO_SETTERS
 #define VULKAN_HPP_NO_EXCEPTIONS
 #include <vulkan/vulkan.hpp>
+#include <vulkan_mem_alloc/alloc.hpp>
 #include <fmt/format.h>
 
 #include "core/assert.h"

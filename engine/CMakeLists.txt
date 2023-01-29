@@ -55,7 +55,8 @@ add_library(${PROJECT_NAME}
         src/volkano.cpp
         src/core/filesystem/filesystem.cpp
         src/core/logging/logging.cpp
-        src/renderer/vk_renderer.cpp)
+        src/renderer/vk_renderer.cpp
+        src/renderer/vma_impl.cpp)
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE src/
@@ -68,7 +69,7 @@ target_precompile_headers(${PROJECT_NAME}
         PRIVATE <algorithm> <concepts> <type_traits> <cstdint> <cstddef> <memory> <ranges>)
 target_link_libraries(${PROJECT_NAME}
         PUBLIC fmt::fmt magic_enum::magic_enum
-        PRIVATE Vulkan::Vulkan debugbreak::debugbreak SDL2::SDL2-static)
+        PRIVATE Vulkan::Vulkan Vulkan::MemoryAllocatorHpp debugbreak::debugbreak SDL2::SDL2-static)
 
 enable_sanitizers(${PROJECT_NAME})
 
