@@ -39,7 +39,7 @@ add_subdirectory(external/)
 add_subdirectory(engine/)
 
 if(VKE_ENABLE_TESTS)
-    message("enabling tests")
+    message(STATUS "volkano - Enabling tests")
     enable_testing()
     add_subdirectory(test/)
 endif()
