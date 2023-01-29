@@ -39,6 +39,18 @@ do {                                                                            
 
 #define VKE_CLOG(condition, category, verbosity, format, ...) do { if((condition)) { VKE_LOG(category, verbosity, format, __VA_ARGS__); } } while(0)
 
+#define VKE_LOG_DYN(category, verbosity, format, ...)                                    \
+do {                                                                                     \
+    constexpr auto v_allowed = ::volkano::log_verbosity{VKE_LOG_COMPILE_TIME_VERBOSITY}; \
+    if (verbosity <= v_allowed) {                                                        \
+        ::volkano::logger::get().log(logcat_ ## category,                                \
+          verbosity, std::source_location::current(),                                    \
+          format __VA_OPT__(,) __VA_ARGS__);                                             \
+    }                                                                                    \
+} while(0)
+
+#define VKE_CLOG_DYN(condition, category, verbosity, format, ...) do { if((condition)) { VKE_LOG_DYN(category, verbosity, format, __VA_ARGS__); } } while(0)
+
 namespace volkano {
 
 class logger {
