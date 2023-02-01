@@ -60,6 +60,7 @@ class logger {
     std::vector<std::unique_ptr<log_sink>> sinks_;
 
     using log_buffer = fmt::basic_memory_buffer<char, 1024>;
+    log_buffer buffer_;
 
 public:
     static logger& get() noexcept;
@@ -72,11 +73,11 @@ public:
             return;
         }
 
-        log_buffer buffer;
-        fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
-        const std::string_view user_log{buffer.data(), buffer.size()};
+        buffer_.clear();
+        fmt::vformat_to(std::back_inserter(buffer_), fmt, fmt::make_format_args(args...));
 
-        log_internal(buffer, category, verbosity, src, user_log);
+        const std::string_view user_log{buffer_.data(), buffer_.size()};
+        log_internal(category, verbosity, src, user_log);
     }
 
     void set_category_verbosity(std::string_view category_name, log_verbosity verbosity) noexcept;
@@ -84,7 +85,7 @@ public:
 private:
     logger();
 
-    void log_internal(log_buffer& buffer, const log_category& category, log_verbosity verbosity,
+    void log_internal(const log_category& category, log_verbosity verbosity,
       std::source_location src, std::string_view user_log) noexcept;
 
     void register_log_category(log_category* category);

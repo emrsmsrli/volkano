@@ -12,9 +12,10 @@
 #include <fmt/os.h>
 #include <fmt/color.h>
 #include <fmt/ostream.h>
+#include <range/v3/algorithm/find_if.hpp>
+#include <range/v3/algorithm/rotate.hpp>
 
 #include "core/platform.h"
-#include "core/algo/find.h"
 #include "core/util/fmt_formatters.h"
 
 VKE_DEFINE_LOG_CATEGORY(general, info);
@@ -89,7 +90,7 @@ void logger::set_category_verbosity(const std::string_view category_name, const 
 
 log_category* logger::find_category_by_name(const std::string_view name) noexcept
 {
-    const auto it = std::ranges::find_if(categories_, [name](const log_category* cat) { return name == cat->name(); });
+    const auto it = ranges::find_if(categories_, [name](const log_category* cat) { return name == cat->name(); });
     return it == categories_.end() ? nullptr : *it;
 }
 
@@ -99,7 +100,7 @@ logger::logger()
     sinks_.push_back(std::make_unique<default_stdout_sink>());
 }
 
-void logger::log_internal(logger::log_buffer& buffer, const log_category& category, const log_verbosity verbosity,
+void logger::log_internal(const log_category& category, const log_verbosity verbosity,
   const std::source_location src, const std::string_view user_log) noexcept
 {
 #if PLATFORM_WINDOWS
@@ -115,11 +116,13 @@ void logger::log_internal(logger::log_buffer& buffer, const log_category& catego
     }
 
     const auto now = std::chrono::system_clock::now();
-    fmt::format_to(std::back_inserter(buffer), "[{:%H:%M}:{:%S}][{}][{}:{}][{}][{}]: {}\n",
+    fmt::format_to(std::back_inserter(buffer_), "[{:%H:%M}:{:%S}][{}][{}:{}][{}][{}]: ",
       now, now.time_since_epoch(), std::this_thread::get_id(),
-      file_name, src.line(), category.name(), verbosity, user_log);
+      file_name, src.line(), category.name(), verbosity);
+    ranges::rotate(buffer_, buffer_.begin() + user_log.size());
+    buffer_.push_back('\n');
 
-    const std::string_view log{buffer.begin() + user_log.size(), buffer.size() - user_log.size()};
+    const std::string_view log{buffer_.begin(), buffer_.size()};
     for (const auto& sink: sinks_) {
         sink->sink(verbosity, log);
     }
