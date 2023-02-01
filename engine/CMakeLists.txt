@@ -35,8 +35,8 @@ add_library(${PROJECT_NAME}
         include/core/int_types.h
         include/core/platform.h
         include/core/type_traits.h
-        include/core/algo/contains.h
-        include/core/algo/find.h
+        include/core/algo/contains_if.h
+        include/core/algo/find_ptr.h
         include/core/algo/index_of.h
         include/core/container/static_vector.h
         include/core/event/delegate.h
