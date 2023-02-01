@@ -5,12 +5,13 @@
  * Refer to the included LICENSE file.
  */
 
+#include "core/filesystem/filesystem.h"
+
 #include <algorithm>
 #include <fstream>
 #include <iterator>
-#include <ranges>
 
-#include "core/filesystem/filesystem.h"
+#include <range/v3/algorithm/copy.hpp>
 #include "core/assert.h"
 
 VKE_DEFINE_LOG_CATEGORY_STATIC(fs, warning);
@@ -41,7 +42,7 @@ void write_bytes_to_file(const path& path, std::span<const u8> data)
     std::ofstream stream{actual_path, std::ios::binary};
     VKE_ASSERT_MSG(stream.is_open(), "output file stream could not be opened: {}", actual_path.string());
 
-    std::ranges::copy(data, std::ostreambuf_iterator<char>(stream));
+    ranges::copy(data, std::ostreambuf_iterator<char>(stream));
     VKE_LOG(fs, verbose, "wrote {} bytes to {}", data.size(), actual_path.string());
 }
 
