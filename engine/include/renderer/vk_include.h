@@ -13,54 +13,9 @@
 #define VULKAN_HPP_NO_EXCEPTIONS
 #include <vulkan/vulkan.hpp>
 #include <vulkan_mem_alloc/alloc.hpp>
-#include <fmt/format.h>
 #include <range/v3/algorithm/contains.hpp>
 
 #include "core/assert.h"
-
-template<>
-struct fmt::formatter<vk::ExtensionProperties> : formatter<std::string>
-{
-    template <typename FormatContext>
-    auto format(const vk::ExtensionProperties& ext, FormatContext& ctx) const -> decltype(ctx.out()) {
-        return fmt::format_to(ctx.out(), "{}({})", static_cast<std::string_view>(ext.extensionName), ext.specVersion);
-    }
-};
-
-template<>
-struct fmt::formatter<vk::LayerProperties> : formatter<std::string>
-{
-    template <typename FormatContext>
-    auto format(const vk::LayerProperties& layer, FormatContext& ctx) const -> decltype(ctx.out()) {
-        return fmt::format_to(ctx.out(), "{}(spec {} impl {})",
-          static_cast<std::string_view>(layer.layerName),
-          layer.specVersion, layer.implementationVersion);
-    }
-};
-
-template<>
-struct fmt::formatter<vk::PhysicalDevice> : formatter<std::string>
-{
-    template <typename FormatContext>
-    auto format(const vk::PhysicalDevice& dev, FormatContext& ctx) const -> decltype(ctx.out()) {
-        const vk::PhysicalDeviceProperties props = dev.getProperties();
-        return fmt::format_to(ctx.out(), "{}, {}, apiVer: {}, devId: {}, driverVer: {}",
-          static_cast<std::string_view>(props.deviceName),
-          to_string(props.deviceType),
-          props.apiVersion,
-          props.deviceID,
-          props.driverVersion);
-    }
-};
-
-template<>
-struct fmt::formatter<vk::Result> : formatter<std::string>
-{
-    template <typename FormatContext>
-    auto format(const vk::Result& result, FormatContext& ctx) const -> decltype(ctx.out()) {
-        return fmt::format_to(ctx.out(), "{}", to_string(result));
-    }
-};
 
 namespace volkano {
 
