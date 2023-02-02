@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#include "vk_include.h" // todo vulkan_handles.hpp
+#include "vk_include.h"
 #include "renderer_interface.h"
 #include "core/logging/logging.h"
 #include "core/filesystem/filesystem.h"
@@ -34,6 +34,7 @@ struct vk_surface_capabilities {
 
 class vk_renderer : public renderer_interface {
     engine* engine_;
+    vk::DynamicLoader dyn_loader_;
     vk::Instance instance_ = nullptr;
     std::vector<vk::PhysicalDevice> physical_devices_;
     vk::PhysicalDevice current_physical_device_ = nullptr;

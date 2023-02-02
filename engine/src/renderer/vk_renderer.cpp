@@ -14,6 +14,8 @@
 #include "core/util/fmt_formatters.h"
 #include "core/algo/index_of.h"
 
+VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
+
 VKE_DEFINE_LOG_CATEGORY(vulkan, verbose);
 VKE_DEFINE_LOG_CATEGORY(renderer, verbose);
 
@@ -37,6 +39,8 @@ void validate_required_extensions(const auto required_extensions, const auto ava
 
 void vk_renderer::initialize() noexcept
 {
+    VKE_ASSERT(dyn_loader_.success());
+
     create_vk_instance();
     create_surface();
     cache_physical_devices();
@@ -115,6 +119,8 @@ vk_renderer::~vk_renderer()
 
 void vk_renderer::create_vk_instance() noexcept
 {
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(dyn_loader_.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr"));
+
     const std::vector<vk::ExtensionProperties> available_instance_ext_properties = vk_check_result(vk::enumerateInstanceExtensionProperties());
     const std::vector<vk::LayerProperties> available_instance_layer_properties = vk_check_result(vk::enumerateInstanceLayerProperties());
     VKE_LOG(vulkan, verbose, "instance extension properties:\n\t{}", fmt::join(available_instance_ext_properties, "\n\t"));
@@ -163,6 +169,8 @@ void vk_renderer::create_vk_instance() noexcept
 
     instance_ = vk_check_result(vk::createInstance(create_info));
     VKE_LOG(vulkan, verbose, "vk instance created");
+
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(instance_);
 }
 
 void vk_renderer::create_surface() noexcept
@@ -255,6 +263,7 @@ void vk_renderer::create_logical_device() noexcept
 
     logical_device_ = vk_check_result(current_physical_device_.createDevice(create_info));
     VKE_LOG(vulkan, verbose, "logical device created");
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(device_);
 }
 
 void vk_renderer::cache_queues() noexcept
