@@ -11,6 +11,8 @@
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #define VULKAN_HPP_NO_SETTERS
 #define VULKAN_HPP_NO_EXCEPTIONS
+#define VULKAN_HPP_NO_SMART_HANDLE
+
 #include <vulkan/vulkan.hpp>
 #include <vulkan_mem_alloc/alloc.hpp>
 #include <range/v3/algorithm/contains.hpp>
