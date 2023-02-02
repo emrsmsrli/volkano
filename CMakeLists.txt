@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 cmake_policy(SET CMP0091 NEW)  # See CMAKE_MSVC_RUNTIME_LIBRARY
-project(volkano_engine)
+project(volkano)
 
 # todo extend CMAKE_BUILD_TYPE (release debug etc) where lto is enabled for some targets
 # see https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#build-configurations

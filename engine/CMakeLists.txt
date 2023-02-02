@@ -6,7 +6,7 @@
 #
 
 cmake_minimum_required(VERSION 3.22)
-project(volkano VERSION 0.0.1 DESCRIPTION "a vulkan based engine" LANGUAGES CXX)
+project(libvolkano VERSION 0.0.1 DESCRIPTION "a vulkan based engine" LANGUAGES CXX)
 
 configure_file(cmake/volkano_version.in
         include/version.h)
