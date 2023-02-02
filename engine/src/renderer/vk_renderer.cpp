@@ -223,22 +223,57 @@ void vk_renderer::switch_physical_device_to(const vk::PhysicalDevice dev) noexce
 
 void vk_renderer::populate_queue_family_indices() noexcept
 {
-    std::vector<vk::QueueFamilyProperties> q_family_props = current_physical_device_.getQueueFamilyProperties();
-    queue_family_indices_.graphics_index = algo::index_of_by_predicate(q_family_props,
-      [](const vk::QueueFamilyProperties& props) {
-          return (props.queueFlags & vk::QueueFlagBits::eGraphics) == vk::QueueFlagBits::eGraphics;
-      });
-    queue_family_indices_.present_index = algo::index_of_by_predicate(q_family_props,
+    // todo improve this logic
+    const std::vector<vk::QueueFamilyProperties> q_family_props = physical_device_.getQueueFamilyProperties();
+    for (u32 idx = 0; const vk::QueueFamilyProperties& props : q_family_props) {
+        if (queue_family_indices_.graphics_index == vk_queue_family_indices::invalid_index &&
+          props.queueFlags & vk::QueueFlagBits::eGraphics) {
+            queue_family_indices_.graphics_index = idx;
+
+            // prefer the same queue for presentation as graphics
+            if (queue_family_indices_.present_index == vk_queue_family_indices::invalid_index &&
+              vk_check_result(physical_device_.getSurfaceSupportKHR(idx, surface_))) {
+                queue_family_indices_.present_index = idx;
+            }
+        }
+
+        // prefer separate transfer queue
+        constexpr auto standalone_transfer_q_flags = ~(vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute) | vk::QueueFlagBits::eTransfer;
+        if (queue_family_indices_.transfer_index == vk_queue_family_indices::invalid_index &&
+          props.queueFlags & standalone_transfer_q_flags) {
+            queue_family_indices_.transfer_index = idx;
+        }
+
+        // prefer separate compute queue
+        constexpr auto standalone_compute_q_flags = ~(vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eTransfer) | vk::QueueFlagBits::eCompute;
+        if (queue_family_indices_.compute_index == vk_queue_family_indices::invalid_index &&
+          props.queueFlags & standalone_compute_q_flags) {
+            queue_family_indices_.compute_index = idx;
+        }
+
+        ++idx;
+    }
+
+    const auto default_family_index = [&q_family_props](u32& out_idx, auto lambda) {
+        if (out_idx == vk_queue_family_indices::invalid_index) {
+            const auto it = std::ranges::find_if(q_family_props, lambda);
+            if (it != q_family_props.end()) {
+                out_idx = static_cast<u32>(std::ranges::distance(q_family_props.begin(), it));
+            }
+        }
+    };
+
+    default_family_index(queue_family_indices_.present_index,
       [&, idx = 0](const vk::QueueFamilyProperties&) mutable {
-          return vk_check_result(current_physical_device_.getSurfaceSupportKHR(idx++, surface_));
+          return vk_check_result(physical_device_.getSurfaceSupportKHR(idx++, surface_));
       });
-    queue_family_indices_.compute_index = algo::index_of_by_predicate(q_family_props,
-      [](const vk::QueueFamilyProperties& props) {
-          return (props.queueFlags & vk::QueueFlagBits::eCompute) == vk::QueueFlagBits::eCompute;
-      });
-    queue_family_indices_.transfer_index = algo::index_of_by_predicate(q_family_props,
+    default_family_index(queue_family_indices_.transfer_index,
       [](const vk::QueueFamilyProperties& props) {
           return (props.queueFlags & vk::QueueFlagBits::eTransfer) == vk::QueueFlagBits::eTransfer;
+      });
+    default_family_index(queue_family_indices_.compute_index,
+      [](const vk::QueueFamilyProperties& props) {
+          return (props.queueFlags & vk::QueueFlagBits::eCompute) == vk::QueueFlagBits::eCompute;
       });
 
     // todo make graphics optional in case engine is running without graphics
@@ -251,10 +286,10 @@ void vk_renderer::populate_queue_family_indices() noexcept
 
 void vk_renderer::create_logical_device() noexcept
 {
-    VKE_ASSERT(queue_family_indices_.graphics_index != -1);
+    VKE_ASSERT(queue_family_indices_.graphics_index != vk_queue_family_indices::invalid_index);
     const float priority = 1.0f;
-    vk::DeviceQueueCreateInfo device_queue_create_info{
-      .queueFamilyIndex = static_cast<uint32_t>(queue_family_indices_.graphics_index),
+    const vk::DeviceQueueCreateInfo device_queue_create_info{
+      .queueFamilyIndex = queue_family_indices_.graphics_index,
       .queueCount = 1,
       .pQueuePriorities = &priority
     };

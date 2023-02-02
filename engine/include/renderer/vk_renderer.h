@@ -20,10 +20,12 @@ VKE_DECLARE_LOG_CATEGORY(renderer);
 namespace volkano {
 
 struct vk_queue_family_indices {
-    ptrdiff graphics_index = -1;
-    ptrdiff present_index = -1;
-    ptrdiff compute_index = -1;
-    ptrdiff transfer_index = -1;
+    static constexpr u32 invalid_index = std::numeric_limits<u32>::max();
+
+    u32 graphics_index = invalid_index;
+    u32 present_index = invalid_index;
+    u32 compute_index = invalid_index;
+    u32 transfer_index = invalid_index;
 };
 
 struct vk_surface_capabilities {
