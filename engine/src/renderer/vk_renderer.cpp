@@ -5,18 +5,28 @@
  * Refer to the included LICENSE file.
  */
 
-#include <SDL2/SDL_vulkan.h>
-
 #include "renderer/vk_renderer.h"
+
+#include <span>
+
+#include <SDL2/SDL_vulkan.h>
+#include <range/v3/action/sort.hpp>
+#include <range/v3/algorithm/contains.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/filter.hpp>
+
 #include "version.h"
-#include "core/algo/contains.h"
+#include "core/algo/contains_if.h"
 #include "core/container/static_vector.h"
 #include "core/util/fmt_formatters.h"
-#include "core/algo/index_of.h"
+#include "renderer/vk_fmt_formatters.h"
 
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
-VKE_DEFINE_LOG_CATEGORY(vulkan, verbose);
+VKE_DEFINE_LOG_CATEGORY(vulkan_general, verbose);
+VKE_DEFINE_LOG_CATEGORY(vulkan_validation, verbose);
+VKE_DEFINE_LOG_CATEGORY(vulkan_performance, verbose);
+VKE_DEFINE_LOG_CATEGORY(vulkan_dev_addr_binding, verbose);
 VKE_DEFINE_LOG_CATEGORY(renderer, verbose);
 
 namespace volkano {
@@ -33,6 +43,69 @@ void validate_required_extensions(const auto required_extensions, const auto ava
 
         VKE_ASSERT_MSG(extension_is_available, "required vulkan extension does not exist: {}", extension);
     }
+}
+
+VkBool32 VKAPI_PTR debug_utils_messenger_callback(
+  VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+  VkDebugUtilsMessageTypeFlagsEXT messageType,
+  const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+  void* /*pUserData*/)
+{
+    const log_verbosity verbosity = [&]() {
+        switch (static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>(messageSeverity)) {
+            case vk::DebugUtilsMessageSeverityFlagBitsEXT::eError: return log_verbosity::error;
+            case vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning: return log_verbosity::warning;
+            case vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo: return log_verbosity::info;
+            case vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose: return log_verbosity::verbose;
+            default: unreachable();
+        }
+    }();
+
+    const auto make_labels_str = [](std::span<const VkDebugUtilsLabelEXT> labels, const std::string_view type) {
+        if (labels.empty()) {
+            return std::string{};
+        }
+
+        return fmt::format("\n{}:\n\t{}", type, fmt::join(labels, "\n\t"));
+    };
+
+    const std::string obj_names = [pCallbackData]() {
+        if (pCallbackData->objectCount == 0) {
+            return std::string{};
+        }
+
+        return fmt::format("\nobjects:\n\t{}",
+          fmt::join(std::span{pCallbackData->pObjects, pCallbackData->objectCount}, "\n\t"));
+    }();
+
+#define VKE_DEBUG_UTILS_LOG(category) VKE_LOG_DYN(category, verbosity, "{}({}): {}{}{}",                        \
+      pCallbackData->pMessageIdName,                                                                            \
+      pCallbackData->messageIdNumber,                                                                           \
+      pCallbackData->pMessage,                                                                                  \
+      obj_names,                                                                                                \
+      make_labels_str(std::span{pCallbackData->pQueueLabels, pCallbackData->queueLabelCount}, "queues"),        \
+      make_labels_str(std::span{pCallbackData->pCmdBufLabels, pCallbackData->cmdBufLabelCount}, "cmd buffers"))
+
+    switch (static_cast<vk::DebugUtilsMessageTypeFlagBitsEXT>(messageType)) {
+        case vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral:
+            VKE_DEBUG_UTILS_LOG(renderer);
+            break;
+        case vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation:
+            VKE_DEBUG_UTILS_LOG(vulkan_validation);
+            break;
+        case vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance:
+            VKE_DEBUG_UTILS_LOG(vulkan_performance);
+            break;
+        case vk::DebugUtilsMessageTypeFlagBitsEXT::eDeviceAddressBinding:
+            VKE_DEBUG_UTILS_LOG(vulkan_dev_addr_binding);
+            break;
+        default: unreachable();
+    }
+
+#undef VKE_DEBUG_UTILS_LOG
+
+    // vulkan expects false from this callback
+    return VK_FALSE;
 }
 
 } // namespace
@@ -112,6 +185,9 @@ vk_renderer::~vk_renderer()
     }
 
     if (instance_) {
+#if DEBUG
+        instance_.destroy(debug_messenger_);
+#endif // DEBUG
         instance_.destroy(surface_);
         instance_.destroy();
     }
@@ -145,7 +221,7 @@ void vk_renderer::create_vk_instance() noexcept
 #if DEBUG
     {
         constexpr std::string_view validation_layer_name = "VK_LAYER_KHRONOS_validation";
-        const bool validation_is_available = algo::contains(
+        const bool validation_is_available = ranges::contains(
           available_instance_layer_properties,
           validation_layer_name,
           &vk::LayerProperties::layerName);
@@ -161,6 +237,9 @@ void vk_renderer::create_vk_instance() noexcept
         SDL_Vulkan_GetInstanceExtensions(engine_->get_window(), &n_sdl_extensions, nullptr);
         instance_extensions.resize(n_sdl_extensions);
         SDL_Vulkan_GetInstanceExtensions(engine_->get_window(), &n_sdl_extensions, instance_extensions.data());
+#if DEBUG
+        instance_extensions.push_back("VK_EXT_debug_utils");
+#endif // DEBUG
     }
 
     validate_required_extensions(instance_extensions, available_instance_ext_properties);
@@ -177,6 +256,22 @@ void vk_renderer::create_vk_instance() noexcept
     VKE_LOG(renderer, verbose, "vk instance created");
 
     VULKAN_HPP_DEFAULT_DISPATCHER.init(instance_);
+
+#if DEBUG
+    vk::DebugUtilsMessengerCreateInfoEXT debug_utils_messenger_create_info{
+      .messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eError |
+        vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
+        vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo |
+        vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose,
+      .messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
+        vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
+        vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+        vk::DebugUtilsMessageTypeFlagBitsEXT::eDeviceAddressBinding,
+      .pfnUserCallback = debug_utils_messenger_callback
+    };
+
+    debug_messenger_ = vk_check_result(instance_.createDebugUtilsMessengerEXT(debug_utils_messenger_create_info));
+#endif // DEBUG
 }
 
 void vk_renderer::create_surface() noexcept
@@ -418,11 +513,6 @@ void vk_renderer::create_swap_chain() noexcept
     }
 
     VKE_LOG(renderer, verbose, "swapchain initialized");
-}
-
-bool vk_renderer::is_phys_device_suitable(const vk::PhysicalDevice dev) noexcept
-{
-    return dev.getProperties().deviceType == vk::PhysicalDeviceType::eDiscreteGpu;
 }
 
 void vk_renderer::create_graphics_pipeline() noexcept

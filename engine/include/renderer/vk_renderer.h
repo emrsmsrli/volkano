@@ -44,6 +44,10 @@ class vk_renderer : public renderer_interface {
     vk::Device device_ = nullptr;
     vk_queue_family_indices queue_family_indices_;
 
+#if DEBUG
+    vk::DebugUtilsMessengerEXT debug_messenger_ = nullptr;
+#endif // DEBUG
+
     vk::SurfaceKHR surface_ = nullptr;
     vk_surface_capabilities surface_capabilities_;
 
@@ -100,8 +104,6 @@ private:
     void record_command_buffer(u32 img_index) noexcept;
 
     vk::ShaderModule create_shader_module(std::span<const u8> spirv_binary) noexcept;
-
-    static bool is_phys_device_suitable(vk::PhysicalDevice dev) noexcept;
 };
 
 } // namespace volkano
