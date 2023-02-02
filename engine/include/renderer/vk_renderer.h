@@ -34,12 +34,13 @@ struct vk_surface_capabilities {
 
 class vk_renderer : public renderer_interface {
     engine* engine_;
+    u32 available_vk_version_ = VK_VERSION_1_3;
     vk::DynamicLoader dyn_loader_;
     vk::Instance instance_ = nullptr;
-    std::vector<vk::PhysicalDevice> physical_devices_;
-    vk::PhysicalDevice current_physical_device_ = nullptr;
+    std::vector<vk::PhysicalDevice> available_physical_devices_;
+    vk::PhysicalDevice physical_device_ = nullptr;
+    vk::Device device_ = nullptr;
     vk_queue_family_indices queue_family_indices_;
-    vk::Device logical_device_ = nullptr;
 
     vk::SurfaceKHR surface_ = nullptr;
     vk_surface_capabilities surface_capabilities_;

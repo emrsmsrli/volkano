@@ -52,16 +52,16 @@ void vk_renderer::initialize() noexcept
 
 void vk_renderer::render() noexcept
 {
-    vk_check_result(logical_device_.waitForFences({in_flight_fence_}, /*waitAll=*/true, /*timeout=*/std::numeric_limits<u64>::max()));
-    vk_check_result(logical_device_.resetFences({in_flight_fence_}));
+    vk_check_result(device_.waitForFences({in_flight_fence_}, /*waitAll=*/true, /*timeout=*/std::numeric_limits<u64>::max()));
+    vk_check_result(device_.resetFences({in_flight_fence_}));
 
-    const u32 image_idx = vk_check_result(logical_device_.acquireNextImageKHR(
+    const u32 image_idx = vk_check_result(device_.acquireNextImageKHR(
       swapchain_, /*timeout=*/std::numeric_limits<u64>::max(), image_available_semaphore_));
     command_buffer_.reset();
     record_command_buffer(image_idx);
 
-    vk::PipelineStageFlags waitStages[]{vk::PipelineStageFlagBits::eColorAttachmentOutput};
-    vk::SubmitInfo submit_info{
+    const vk::PipelineStageFlags waitStages[]{vk::PipelineStageFlagBits::eColorAttachmentOutput};
+    const vk::SubmitInfo submit_info{
       .waitSemaphoreCount = 1,
       .pWaitSemaphores = &image_available_semaphore_,
       .pWaitDstStageMask = waitStages,
@@ -73,7 +73,7 @@ void vk_renderer::render() noexcept
 
     vk_check_result(graphics_queue_.submit({submit_info}, in_flight_fence_));
 
-    vk::PresentInfoKHR present_info{
+    const vk::PresentInfoKHR present_info{
       .waitSemaphoreCount = 1,
       .pWaitSemaphores = &render_finished_semaphore_,
       .swapchainCount = 1,
@@ -81,7 +81,7 @@ void vk_renderer::render() noexcept
       .pImageIndices = &image_idx
     };
 
-    vk::Result present_result = present_queue_.presentKHR(present_info);
+    const vk::Result present_result = present_queue_.presentKHR(present_info);
     if (present_result == vk::Result::eSuboptimalKHR || present_result == vk::Result::eErrorOutOfDateKHR) {
         on_window_resize();
     }
@@ -97,18 +97,18 @@ void vk_renderer::on_window_resize() noexcept
 
 vk_renderer::~vk_renderer()
 {
-    if (logical_device_) {
+    if (device_) {
         destroy_surface_objects();
 
-        logical_device_.destroy(swapchain_);
-        logical_device_.destroy(pipeline_layout_);
-        logical_device_.destroy(pipeline_);
-        logical_device_.destroy(render_pass_);
-        logical_device_.destroy(command_pool_);
-        logical_device_.destroy(image_available_semaphore_);
-        logical_device_.destroy(render_finished_semaphore_);
-        logical_device_.destroy(in_flight_fence_);
-        logical_device_.destroy();
+        device_.destroy(swapchain_);
+        device_.destroy(pipeline_layout_);
+        device_.destroy(pipeline_);
+        device_.destroy(render_pass_);
+        device_.destroy(command_pool_);
+        device_.destroy(image_available_semaphore_);
+        device_.destroy(render_finished_semaphore_);
+        device_.destroy(in_flight_fence_);
+        device_.destroy();
     }
 
     if (instance_) {
@@ -126,12 +126,18 @@ void vk_renderer::create_vk_instance() noexcept
     VKE_LOG(vulkan, verbose, "instance extension properties:\n\t{}", fmt::join(available_instance_ext_properties, "\n\t"));
     VKE_LOG(vulkan, verbose, "instance layer properties:\n\t{}", fmt::join(available_instance_layer_properties, "\n\t"));
 
-    vk::ApplicationInfo appInfo{
+    available_vk_version_ = vk_check_result(vk::enumerateInstanceVersion());
+    VKE_LOG(vulkan, verbose, "vk api ver {}.{}.{}",
+      VK_API_VERSION_MAJOR(available_vk_version_),
+      VK_API_VERSION_MINOR(available_vk_version_),
+      VK_API_VERSION_PATCH(available_vk_version_));
+
+    const vk::ApplicationInfo appInfo{
       .pApplicationName = "volkano",
       .applicationVersion = VK_MAKE_VERSION(volkano::version_major, volkano::version_minor, volkano::version_patch),
       .pEngineName = "volkano",
       .engineVersion = VK_MAKE_VERSION(0, 0, 1),
-      .apiVersion = VK_API_VERSION_1_3
+      .apiVersion = available_vk_version_
     };
 
     static_vector<const char*, 8> instance_layers;
@@ -159,7 +165,7 @@ void vk_renderer::create_vk_instance() noexcept
 
     validate_required_extensions(instance_extensions, available_instance_ext_properties);
 
-    vk::InstanceCreateInfo create_info{
+    const vk::InstanceCreateInfo create_info{
       .pApplicationInfo = &appInfo,
       .enabledLayerCount = instance_layers.size(),
       .ppEnabledLayerNames = instance_layers.data(),
@@ -184,21 +190,30 @@ void vk_renderer::create_surface() noexcept
 
 void vk_renderer::cache_physical_devices() noexcept
 {
-    physical_devices_ = vk_check_result(instance_.enumeratePhysicalDevices());
-    // todo filter out unsuitable devices
-    VKE_LOG(vulkan, verbose, "available physical devices:\n\t{}", fmt::join(physical_devices_, "\n\t"));
+    available_physical_devices_ = vk_check_result(instance_.enumeratePhysicalDevices());
+    VKE_LOG(vulkan, verbose, "all physical devices:\n\t{}", fmt::join(available_physical_devices_, "\n\t"));
 
-    // todo rate and sort devices instead of this based on type, max limits, and queue family availability, (possibly other stuff too)
-    const auto found_it = std::ranges::find_if(physical_devices_, &vk_renderer::is_phys_device_suitable);
-    VKE_ASSERT_MSG(found_it != physical_devices_.end(), "no suitable physical device was found to run vulkan");
+    available_physical_devices_ = available_physical_devices_
+      | ranges::views::filter([](const vk::PhysicalDevice dev) { return rate_physical_device(dev) != 0; })
+      | ranges::to<std::vector>()
+      | ranges::actions::sort([](const vk::PhysicalDevice r, const vk::PhysicalDevice l) {
+          return rate_physical_device(r) > rate_physical_device(l);
+      });
 
-    switch_physical_device_to(*found_it);
+    VKE_ASSERT_MSG(!available_physical_devices_.empty(), "no suitable physical device was found to run vulkan");
+    VKE_LOG(vulkan, verbose, "available physical devices:\n\t{}", fmt::join(available_physical_devices_, "\n\t"));
+
+    switch_physical_device_to(available_physical_devices_.front());
 }
 
 void vk_renderer::switch_physical_device_to(const vk::PhysicalDevice dev) noexcept
 {
-    current_physical_device_ = dev;
-    VKE_LOG(renderer, info, "current physical dev: {}", current_physical_device_);
+    physical_device_ = dev;
+    available_vk_version_ = dev.getProperties().apiVersion;
+    VKE_LOG(renderer, info, "current physical dev: {} apiVer: {}.{}.{}", physical_device_,
+      VK_API_VERSION_MAJOR(available_vk_version_),
+      VK_API_VERSION_MINOR(available_vk_version_),
+      VK_API_VERSION_PATCH(available_vk_version_));
 
     populate_queue_family_indices();
     create_logical_device();
@@ -244,16 +259,17 @@ void vk_renderer::create_logical_device() noexcept
       .pQueuePriorities = &priority
     };
 
-    std::vector<vk::ExtensionProperties> device_extension_properties = vk_check_result(current_physical_device_.enumerateDeviceExtensionProperties());
+    const std::vector<vk::ExtensionProperties> device_extension_properties = vk_check_result(physical_device_.enumerateDeviceExtensionProperties());
+    VKE_LOG(vulkan, verbose, "device extension properties:\n\t{}", fmt::join(device_extension_properties, "\n\t"));
 
-    static_vector<const char*, 16> device_extensions{
+    const static_vector<const char*, 4> device_extensions{
       VK_KHR_SWAPCHAIN_EXTENSION_NAME
     };
 
     validate_required_extensions(device_extensions, device_extension_properties);
 
-    vk::PhysicalDeviceFeatures physical_device_features;
-    vk::DeviceCreateInfo create_info{
+    const vk::PhysicalDeviceFeatures physical_device_features;
+    const vk::DeviceCreateInfo create_info{
       .queueCreateInfoCount = 1,
       .pQueueCreateInfos = &device_queue_create_info,
       .enabledExtensionCount = static_cast<uint32_t>(device_extensions.size()),
@@ -261,24 +277,24 @@ void vk_renderer::create_logical_device() noexcept
       .pEnabledFeatures = &physical_device_features,
     };
 
-    logical_device_ = vk_check_result(current_physical_device_.createDevice(create_info));
+    device_ = vk_check_result(physical_device_.createDevice(create_info));
     VKE_LOG(vulkan, verbose, "logical device created");
     VULKAN_HPP_DEFAULT_DISPATCHER.init(device_);
 }
 
 void vk_renderer::cache_queues() noexcept
 {
-    graphics_queue_ = logical_device_.getQueue(queue_family_indices_.graphics_index, 0);
-    present_queue_ = logical_device_.getQueue(queue_family_indices_.present_index, 0);
-    // compute_queue_ = logical_device_.getQueue(queue_family_indices_.compute_index, 0);
-    // transfer_queue_ = logical_device_.getQueue(queue_family_indices_.transfer_index, 0);
+    graphics_queue_ = device_.getQueue(queue_family_indices_.graphics_index, /*queueIndex=*/0);
+    present_queue_ = device_.getQueue(queue_family_indices_.present_index, /*queueIndex=*/0);
+    // compute_queue_ = device_.getQueue(queue_family_indices_.compute_index, /*queueIndex=*/0);
+    // transfer_queue_ = device_.getQueue(queue_family_indices_.transfer_index, /*queueIndex=*/0);
 }
 
 void vk_renderer::create_swap_chain() noexcept
 {
-    surface_capabilities_.capabilities = vk_check_result(current_physical_device_.getSurfaceCapabilitiesKHR(surface_));
-    surface_capabilities_.formats = vk_check_result(current_physical_device_.getSurfaceFormatsKHR(surface_));
-    surface_capabilities_.present_modes = vk_check_result(current_physical_device_.getSurfacePresentModesKHR(surface_));
+    surface_capabilities_.capabilities = vk_check_result(physical_device_.getSurfaceCapabilitiesKHR(surface_));
+    surface_capabilities_.formats = vk_check_result(physical_device_.getSurfaceFormatsKHR(surface_));
+    surface_capabilities_.present_modes = vk_check_result(physical_device_.getSurfacePresentModesKHR(surface_));
 
     const vk::SurfaceFormatKHR surface_fmt = [&]() {
         for (const auto& availableFormat : surface_capabilities_.formats) {
@@ -321,7 +337,7 @@ void vk_renderer::create_swap_chain() noexcept
         }
     }();
 
-    vk::SwapchainCreateInfoKHR swapchain_create_info{
+    const vk::SwapchainCreateInfoKHR swapchain_create_info{
       .surface = surface_,
       .minImageCount = surface_capabilities_.capabilities.minImageCount + 1,
       .imageFormat = surface_fmt.format,
@@ -339,12 +355,12 @@ void vk_renderer::create_swap_chain() noexcept
       .oldSwapchain = swapchain_
     };
 
-    swapchain_ = vk_check_result(logical_device_.createSwapchainKHR(swapchain_create_info));
-    swapchain_images_ = vk_check_result(logical_device_.getSwapchainImagesKHR(swapchain_));
+    swapchain_ = vk_check_result(device_.createSwapchainKHR(swapchain_create_info));
+    swapchain_images_ = vk_check_result(device_.getSwapchainImagesKHR(swapchain_));
 
     swapchain_image_views_.reserve(swapchain_images_.size());
     for (const vk::Image img : swapchain_images_) {
-        vk::ImageView view = vk_check_result(logical_device_.createImageView(
+        const vk::ImageView view = vk_check_result(device_.createImageView(
           vk::ImageViewCreateInfo{
             .image = img,
             .viewType = vk::ImageViewType::e2D,
@@ -379,10 +395,10 @@ void vk_renderer::create_graphics_pipeline() noexcept
     const std::vector<u8> vert = fs::read_bytes_from_file("engine/shaders/triangle.vert.spr");
     const std::vector<u8> frag = fs::read_bytes_from_file("engine/shaders/triangle.frag.spr");
 
-    vk::ShaderModule vert_module = create_shader_module(vert);
-    vk::ShaderModule frag_module = create_shader_module(frag);
+    const vk::ShaderModule vert_module = create_shader_module(vert);
+    const vk::ShaderModule frag_module = create_shader_module(frag);
 
-    static_vector<vk::PipelineShaderStageCreateInfo, 2> shader_stage_create_infos{
+    const static_vector<vk::PipelineShaderStageCreateInfo, 2> shader_stage_create_infos{
       vk::PipelineShaderStageCreateInfo{
         .stage = vk::ShaderStageFlagBits::eVertex,
         .module = vert_module,
@@ -395,34 +411,34 @@ void vk_renderer::create_graphics_pipeline() noexcept
       }
     };
 
-    static_vector<vk::DynamicState, 2> dynamic_states{
+    const static_vector<vk::DynamicState, 2> dynamic_states{
       vk::DynamicState::eViewport,
       vk::DynamicState::eScissor
     };
 
-    vk::PipelineDynamicStateCreateInfo dynamic_state_create_info{
+    const vk::PipelineDynamicStateCreateInfo dynamic_state_create_info{
       .dynamicStateCount = dynamic_states.size(),
       .pDynamicStates = dynamic_states.data()
     };
 
-    vk::PipelineVertexInputStateCreateInfo vertex_input_state_create_info{
+    const vk::PipelineVertexInputStateCreateInfo vertex_input_state_create_info{
       .vertexBindingDescriptionCount = 0,
       .pVertexBindingDescriptions = nullptr,
       .vertexAttributeDescriptionCount = 0,
       .pVertexAttributeDescriptions = nullptr
     };
 
-    vk::PipelineInputAssemblyStateCreateInfo input_assembly_state_create_info{
+    const vk::PipelineInputAssemblyStateCreateInfo input_assembly_state_create_info{
       .topology = vk::PrimitiveTopology::eTriangleList,
       .primitiveRestartEnable = false
     };
 
-    vk::PipelineViewportStateCreateInfo viewport_state_create_info{
+    const vk::PipelineViewportStateCreateInfo viewport_state_create_info{
       .viewportCount = 1,
       .scissorCount = 1
     };
 
-    vk::PipelineRasterizationStateCreateInfo rasterization_state_create_info{
+    const vk::PipelineRasterizationStateCreateInfo rasterization_state_create_info{
       .depthClampEnable = false,
       .rasterizerDiscardEnable = false,
       .polygonMode = vk::PolygonMode::eFill,
@@ -432,12 +448,12 @@ void vk_renderer::create_graphics_pipeline() noexcept
       .lineWidth = 1.f
     };
 
-    vk::PipelineMultisampleStateCreateInfo multisample_state_create_info{
+    const vk::PipelineMultisampleStateCreateInfo multisample_state_create_info{
       .rasterizationSamples = vk::SampleCountFlagBits::e1,
       .sampleShadingEnable = false // msaa disabled
     };
 
-    vk::PipelineColorBlendAttachmentState color_blend_attachment_state{
+    const vk::PipelineColorBlendAttachmentState color_blend_attachment_state{
       .blendEnable = false,
       .srcColorBlendFactor = vk::BlendFactor::eOne,
       .dstColorBlendFactor = vk::BlendFactor::eZero,
@@ -449,7 +465,7 @@ void vk_renderer::create_graphics_pipeline() noexcept
         | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA
     };
 
-    vk::PipelineColorBlendStateCreateInfo color_blend_state_create_info{
+    const vk::PipelineColorBlendStateCreateInfo color_blend_state_create_info{
       .logicOpEnable = false,
       .logicOp = vk::LogicOp::eCopy,
       .attachmentCount = 1,
@@ -457,12 +473,12 @@ void vk_renderer::create_graphics_pipeline() noexcept
       .blendConstants = {{0.f, 0.f, 0.f, 0.f}}
     };
 
-    vk::PipelineLayoutCreateInfo pipeline_layout_create_info{};
-    pipeline_layout_ = vk_check_result(logical_device_.createPipelineLayout(pipeline_layout_create_info));
+    const vk::PipelineLayoutCreateInfo pipeline_layout_create_info{};
+    pipeline_layout_ = vk_check_result(device_.createPipelineLayout(pipeline_layout_create_info));
 
     create_render_pass();
 
-    vk::GraphicsPipelineCreateInfo pipeline_create_info{
+    const vk::GraphicsPipelineCreateInfo pipeline_create_info{
       .stageCount = shader_stage_create_infos.size(),
       .pStages = shader_stage_create_infos.data(),
       .pVertexInputState = &vertex_input_state_create_info,
@@ -478,17 +494,17 @@ void vk_renderer::create_graphics_pipeline() noexcept
       .subpass = 0
     };
 
-    pipeline_ = vk_check_result(logical_device_.createGraphicsPipeline(nullptr, pipeline_create_info));
+    pipeline_ = vk_check_result(device_.createGraphicsPipeline(nullptr, pipeline_create_info));
 
-    logical_device_.destroy(vert_module);
-    logical_device_.destroy(frag_module);
+    device_.destroy(vert_module);
+    device_.destroy(frag_module);
 
     VKE_LOG(vulkan, verbose, "graphics pipeline created");
 }
 
 void vk_renderer::create_render_pass() noexcept
 {
-    vk::AttachmentDescription color_attachment_desc{
+    const vk::AttachmentDescription color_attachment_desc{
       .format = surface_fmt_,
       .samples = vk::SampleCountFlagBits::e1,
       .loadOp = vk::AttachmentLoadOp::eClear,
@@ -499,18 +515,18 @@ void vk_renderer::create_render_pass() noexcept
       .finalLayout = vk::ImageLayout::ePresentSrcKHR
     };
 
-    vk::AttachmentReference color_attachment_ref{
+    const vk::AttachmentReference color_attachment_ref{
       .attachment = 0,
       .layout = vk::ImageLayout::eColorAttachmentOptimal
     };
 
-    vk::SubpassDescription subpass_description{
+    const vk::SubpassDescription subpass_description{
       .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
       .colorAttachmentCount = 1,
       .pColorAttachments = &color_attachment_ref,
     };
 
-    vk::SubpassDependency dependency{
+    const vk::SubpassDependency dependency{
       .srcSubpass = VK_SUBPASS_EXTERNAL,
       .dstSubpass = 0,
       .srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput,
@@ -519,7 +535,7 @@ void vk_renderer::create_render_pass() noexcept
       .dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite,
     };
 
-    vk::RenderPassCreateInfo render_pass_create_info{
+    const vk::RenderPassCreateInfo render_pass_create_info{
       .attachmentCount = 1,
       .pAttachments = &color_attachment_desc,
       .subpassCount = 1,
@@ -528,15 +544,15 @@ void vk_renderer::create_render_pass() noexcept
       .pDependencies = &dependency
     };
 
-    render_pass_ = vk_check_result(logical_device_.createRenderPass(render_pass_create_info));
+    render_pass_ = vk_check_result(device_.createRenderPass(render_pass_create_info));
     VKE_LOG(vulkan, verbose, "render pass created");
 };
 
 void vk_renderer::create_framebuffers() noexcept
 {
     swapchain_framebuffers_.reserve(swapchain_image_views_.size());
-    for (vk::ImageView img_view : swapchain_image_views_) {
-        vk::FramebufferCreateInfo framebuffer_create_info{
+    for (const vk::ImageView img_view : swapchain_image_views_) {
+        const vk::FramebufferCreateInfo framebuffer_create_info{
           .renderPass = render_pass_,
           .attachmentCount = 1,
           .pAttachments = &img_view,
@@ -545,7 +561,7 @@ void vk_renderer::create_framebuffers() noexcept
           .layers = 1
         };
 
-        vk::Framebuffer framebuffer = vk_check_result(logical_device_.createFramebuffer(framebuffer_create_info));
+        const vk::Framebuffer framebuffer = vk_check_result(device_.createFramebuffer(framebuffer_create_info));
         swapchain_framebuffers_.emplace_back(framebuffer);
     }
     VKE_LOG(vulkan, verbose, "framebuffers created");
@@ -553,40 +569,40 @@ void vk_renderer::create_framebuffers() noexcept
 
 void vk_renderer::create_command_pool() noexcept
 {
-    vk::CommandPoolCreateInfo command_pool_create_info{
+    const vk::CommandPoolCreateInfo command_pool_create_info{
       .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
       .queueFamilyIndex = static_cast<u32>(queue_family_indices_.graphics_index)
     };
 
-    command_pool_ = vk_check_result(logical_device_.createCommandPool(command_pool_create_info));
+    command_pool_ = vk_check_result(device_.createCommandPool(command_pool_create_info));
 
-    vk::CommandBufferAllocateInfo command_buffer_allocate_info{
+    const vk::CommandBufferAllocateInfo command_buffer_allocate_info{
       .commandPool = command_pool_,
       .level = vk::CommandBufferLevel::ePrimary,
       .commandBufferCount = 1
     };
 
-    command_buffer_ = vk_check_result(logical_device_.allocateCommandBuffers(command_buffer_allocate_info))[0];
+    command_buffer_ = vk_check_result(device_.allocateCommandBuffers(command_buffer_allocate_info))[0];
     VKE_LOG(vulkan, verbose, "cmd buffer allocated");
 }
 
 void vk_renderer::create_sync_objects() noexcept
 {
-    image_available_semaphore_ = vk_check_result(logical_device_.createSemaphore({}));
-    render_finished_semaphore_ = vk_check_result(logical_device_.createSemaphore({}));
-    in_flight_fence_ = vk_check_result(logical_device_.createFence(vk::FenceCreateInfo{.flags = vk::FenceCreateFlagBits::eSignaled}));
+    image_available_semaphore_ = vk_check_result(device_.createSemaphore({}));
+    render_finished_semaphore_ = vk_check_result(device_.createSemaphore({}));
+    in_flight_fence_ = vk_check_result(device_.createFence(vk::FenceCreateInfo{.flags = vk::FenceCreateFlagBits::eSignaled}));
 }
 
 void vk_renderer::destroy_surface_objects() noexcept
 {
-    vk_check_result(logical_device_.waitIdle());
+    vk_check_result(device_.waitIdle());
 
     for (vk::ImageView view : swapchain_image_views_) {
-        logical_device_.destroy(view);
+        device_.destroy(view);
     }
 
     for (vk::Framebuffer buffer : swapchain_framebuffers_) {
-        logical_device_.destroy(buffer);
+        device_.destroy(buffer);
     }
 
     swapchain_images_.clear();
@@ -599,10 +615,10 @@ void vk_renderer::record_command_buffer(u32 img_index) noexcept
     vk::CommandBufferBeginInfo cmd_buffer_begin_info{};
     VKE_ASSERT(command_buffer_.begin(cmd_buffer_begin_info) == vk::Result::eSuccess);
 
-    vk::ClearValue clear_color_value{
+    const vk::ClearValue clear_color_value{
       .color = vk::ClearColorValue{{{0.f, 0.f, 0.f, 1.f}}}
     };
-    vk::RenderPassBeginInfo render_pass_begin_info{
+    const vk::RenderPassBeginInfo render_pass_begin_info{
       .renderPass = render_pass_,
       .framebuffer = swapchain_framebuffers_[img_index],
       .renderArea = {
@@ -616,7 +632,7 @@ void vk_renderer::record_command_buffer(u32 img_index) noexcept
     command_buffer_.beginRenderPass(render_pass_begin_info, vk::SubpassContents::eInline);
     command_buffer_.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline_);
 
-    vk::Viewport viewport{
+    const vk::Viewport viewport{
       .x = 0.f,
       .y = 0.f,
       .width = static_cast<float>(extent_.width),
@@ -626,7 +642,7 @@ void vk_renderer::record_command_buffer(u32 img_index) noexcept
     };
     command_buffer_.setViewport(/*firstViewport=*/0, /*viewportCount=*/1, &viewport);
 
-    vk::Rect2D scissor{
+    const vk::Rect2D scissor{
       .offset = {
         .x = 0,
         .y = 0
@@ -643,7 +659,7 @@ void vk_renderer::record_command_buffer(u32 img_index) noexcept
 
 vk::ShaderModule vk_renderer::create_shader_module(std::span<const u8> spirv_binary) noexcept
 {
-    return vk_check_result(logical_device_.createShaderModule(vk::ShaderModuleCreateInfo{
+    return vk_check_result(device_.createShaderModule(vk::ShaderModuleCreateInfo{
       .codeSize = spirv_binary.size(),
       .pCode = reinterpret_cast<const u32*>(spirv_binary.data())
     }));
