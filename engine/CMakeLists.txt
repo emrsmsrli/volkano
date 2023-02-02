@@ -69,7 +69,7 @@ target_precompile_headers(${PROJECT_NAME}
             include/renderer/vk_include.h)
 target_link_libraries(${PROJECT_NAME}
         PUBLIC fmt::fmt magic_enum::magic_enum
-        PRIVATE Vulkan::Headers debugbreak::debugbreak SDL2::SDL2-static)
+        PRIVATE Vulkan::Headers VulkanMemoryAllocatorHpp::Headers debugbreak::debugbreak SDL2::SDL2-static)
 
 enable_sanitizers(${PROJECT_NAME})
 

@@ -75,6 +75,8 @@ class vk_renderer : public renderer_interface {
     vk::Extent2D extent_;
     vk::Format surface_fmt_ = vk::Format::eB8G8R8A8Srgb;
 
+    vma::Allocator allocator_ = nullptr;
+
 public:
     explicit vk_renderer(engine* engine) : engine_{engine} {}
     ~vk_renderer();

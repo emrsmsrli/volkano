@@ -13,6 +13,8 @@
 #define VULKAN_HPP_NO_SETTERS
 #define VULKAN_HPP_NO_EXCEPTIONS
 #define VULKAN_HPP_NO_SMART_HANDLE
+#define VMA_STATIC_VULKAN_FUNCTIONS 0
+#define VMA_DYNAMIC_VULKAN_FUNCTIONS 0
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan_mem_alloc/alloc.hpp>

@@ -121,6 +121,15 @@ void vk_renderer::initialize() noexcept
     create_framebuffers();
     create_command_pool();
     create_sync_objects();
+
+    const vma::VulkanFunctions vk_funcs = vma::functionsFromDispatcher(VULKAN_HPP_DEFAULT_DISPATCHER);
+    allocator_ = vk_check_result(vma::createAllocator(vma::AllocatorCreateInfo{
+      .physicalDevice = physical_device_,
+      .device = device_,
+      .pVulkanFunctions = &vk_funcs,
+      .instance = instance_,
+      .vulkanApiVersion = available_vk_version_
+    }));
 }
 
 void vk_renderer::render() noexcept
