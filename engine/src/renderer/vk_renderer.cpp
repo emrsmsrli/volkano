@@ -123,11 +123,11 @@ void vk_renderer::create_vk_instance() noexcept
 
     const std::vector<vk::ExtensionProperties> available_instance_ext_properties = vk_check_result(vk::enumerateInstanceExtensionProperties());
     const std::vector<vk::LayerProperties> available_instance_layer_properties = vk_check_result(vk::enumerateInstanceLayerProperties());
-    VKE_LOG(vulkan, verbose, "instance extension properties:\n\t{}", fmt::join(available_instance_ext_properties, "\n\t"));
-    VKE_LOG(vulkan, verbose, "instance layer properties:\n\t{}", fmt::join(available_instance_layer_properties, "\n\t"));
+    VKE_LOG(renderer, verbose, "instance extension properties:\n\t{}", fmt::join(available_instance_ext_properties, "\n\t"));
+    VKE_LOG(renderer, verbose, "instance layer properties:\n\t{}", fmt::join(available_instance_layer_properties, "\n\t"));
 
     available_vk_version_ = vk_check_result(vk::enumerateInstanceVersion());
-    VKE_LOG(vulkan, verbose, "vk api ver {}.{}.{}",
+    VKE_LOG(renderer, verbose, "vk api ver {}.{}.{}",
       VK_API_VERSION_MAJOR(available_vk_version_),
       VK_API_VERSION_MINOR(available_vk_version_),
       VK_API_VERSION_PATCH(available_vk_version_));
@@ -174,7 +174,7 @@ void vk_renderer::create_vk_instance() noexcept
     };
 
     instance_ = vk_check_result(vk::createInstance(create_info));
-    VKE_LOG(vulkan, verbose, "vk instance created");
+    VKE_LOG(renderer, verbose, "vk instance created");
 
     VULKAN_HPP_DEFAULT_DISPATCHER.init(instance_);
 }
@@ -185,13 +185,13 @@ void vk_renderer::create_surface() noexcept
     [[maybe_unused]] SDL_bool result = SDL_Vulkan_CreateSurface(engine_->get_window(), instance_, &surface);
     surface_ = surface;
     VKE_ASSERT_MSG(result == SDL_TRUE, "SDL could not create a Vulkan surface");
-    VKE_LOG(vulkan, verbose, "vk surface created");
+    VKE_LOG(renderer, verbose, "vk surface created");
 }
 
 void vk_renderer::cache_physical_devices() noexcept
 {
     available_physical_devices_ = vk_check_result(instance_.enumeratePhysicalDevices());
-    VKE_LOG(vulkan, verbose, "all physical devices:\n\t{}", fmt::join(available_physical_devices_, "\n\t"));
+    VKE_LOG(renderer, verbose, "all physical devices:\n\t{}", fmt::join(available_physical_devices_, "\n\t"));
 
     available_physical_devices_ = available_physical_devices_
       | ranges::views::filter([](const vk::PhysicalDevice dev) { return rate_physical_device(dev) != 0; })
@@ -201,7 +201,7 @@ void vk_renderer::cache_physical_devices() noexcept
       });
 
     VKE_ASSERT_MSG(!available_physical_devices_.empty(), "no suitable physical device was found to run vulkan");
-    VKE_LOG(vulkan, verbose, "available physical devices:\n\t{}", fmt::join(available_physical_devices_, "\n\t"));
+    VKE_LOG(renderer, verbose, "available physical devices:\n\t{}", fmt::join(available_physical_devices_, "\n\t"));
 
     switch_physical_device_to(available_physical_devices_.front());
 }
@@ -260,7 +260,7 @@ void vk_renderer::create_logical_device() noexcept
     };
 
     const std::vector<vk::ExtensionProperties> device_extension_properties = vk_check_result(physical_device_.enumerateDeviceExtensionProperties());
-    VKE_LOG(vulkan, verbose, "device extension properties:\n\t{}", fmt::join(device_extension_properties, "\n\t"));
+    VKE_LOG(renderer, verbose, "device extension properties:\n\t{}", fmt::join(device_extension_properties, "\n\t"));
 
     const static_vector<const char*, 4> device_extensions{
       VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -278,7 +278,7 @@ void vk_renderer::create_logical_device() noexcept
     };
 
     device_ = vk_check_result(physical_device_.createDevice(create_info));
-    VKE_LOG(vulkan, verbose, "logical device created");
+    VKE_LOG(renderer, verbose, "logical device created");
     VULKAN_HPP_DEFAULT_DISPATCHER.init(device_);
 }
 
@@ -305,7 +305,7 @@ void vk_renderer::create_swap_chain() noexcept
 
         return surface_capabilities_.formats[0];
     }();
-    VKE_LOG(vulkan, verbose, "swap chain surface format: {} color space: {}", surface_fmt.format, surface_fmt.colorSpace);
+    VKE_LOG(renderer, verbose, "swap chain surface format: {} color space: {}", surface_fmt.format, surface_fmt.colorSpace);
 
     const vk::PresentModeKHR present_mode = [&]() {
         for (const auto& availablePresentMode : surface_capabilities_.present_modes) {
@@ -316,7 +316,7 @@ void vk_renderer::create_swap_chain() noexcept
 
         return vk::PresentModeKHR::eFifo;
     }();
-    VKE_LOG(vulkan, verbose, "swap chain present mode: {}", present_mode);
+    VKE_LOG(renderer, verbose, "swap chain present mode: {}", present_mode);
 
     surface_fmt_ = surface_fmt.format;
     extent_ = [&]() {
@@ -382,7 +382,7 @@ void vk_renderer::create_swap_chain() noexcept
         swapchain_image_views_.emplace_back(view);
     }
 
-    VKE_LOG(vulkan, verbose, "swapchain initialized");
+    VKE_LOG(renderer, verbose, "swapchain initialized");
 }
 
 bool vk_renderer::is_phys_device_suitable(const vk::PhysicalDevice dev) noexcept
@@ -499,7 +499,7 @@ void vk_renderer::create_graphics_pipeline() noexcept
     device_.destroy(vert_module);
     device_.destroy(frag_module);
 
-    VKE_LOG(vulkan, verbose, "graphics pipeline created");
+    VKE_LOG(renderer, verbose, "graphics pipeline created");
 }
 
 void vk_renderer::create_render_pass() noexcept
@@ -545,7 +545,7 @@ void vk_renderer::create_render_pass() noexcept
     };
 
     render_pass_ = vk_check_result(device_.createRenderPass(render_pass_create_info));
-    VKE_LOG(vulkan, verbose, "render pass created");
+    VKE_LOG(renderer, verbose, "render pass created");
 };
 
 void vk_renderer::create_framebuffers() noexcept
@@ -564,7 +564,7 @@ void vk_renderer::create_framebuffers() noexcept
         const vk::Framebuffer framebuffer = vk_check_result(device_.createFramebuffer(framebuffer_create_info));
         swapchain_framebuffers_.emplace_back(framebuffer);
     }
-    VKE_LOG(vulkan, verbose, "framebuffers created");
+    VKE_LOG(renderer, verbose, "framebuffers created");
 }
 
 void vk_renderer::create_command_pool() noexcept
@@ -583,7 +583,7 @@ void vk_renderer::create_command_pool() noexcept
     };
 
     command_buffer_ = vk_check_result(device_.allocateCommandBuffers(command_buffer_allocate_info))[0];
-    VKE_LOG(vulkan, verbose, "cmd buffer allocated");
+    VKE_LOG(renderer, verbose, "cmd buffer allocated");
 }
 
 void vk_renderer::create_sync_objects() noexcept
