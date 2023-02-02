@@ -58,9 +58,7 @@ add_library(${PROJECT_NAME}
         src/renderer/vk_renderer.cpp
         src/renderer/vma_impl.cpp)
 
-target_include_directories(${PROJECT_NAME}
-        PRIVATE src/
-        PUBLIC include/)
+target_include_directories(${PROJECT_NAME} PUBLIC include/)
 target_set_cxx_standard(${PROJECT_NAME} 20)
 target_set_warnings(${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME} PUBLIC VKE_LOG_COMPILE_TIME_VERBOSITY=${LOG_VERBOSITY_INDEX})
