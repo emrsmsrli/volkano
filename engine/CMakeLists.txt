@@ -64,7 +64,9 @@ target_set_warnings(${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME} PUBLIC VKE_LOG_COMPILE_TIME_VERBOSITY=${LOG_VERBOSITY_INDEX})
 target_precompile_headers(${PROJECT_NAME}
         PUBLIC include/volkano.h
-        PRIVATE <algorithm> <concepts> <type_traits> <cstdint> <cstddef> <memory> <ranges>)
+        PRIVATE <algorithm> <concepts> <type_traits> <cstdint> <cstddef> <memory>
+            <fmt/format.h>
+            include/renderer/vk_include.h)
 target_link_libraries(${PROJECT_NAME}
         PUBLIC fmt::fmt magic_enum::magic_enum
         PRIVATE Vulkan::Vulkan Vulkan::MemoryAllocatorHpp debugbreak::debugbreak SDL2::SDL2-static)
