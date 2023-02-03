@@ -21,6 +21,7 @@
 #include <range/v3/algorithm/contains.hpp>
 
 #include "core/assert.h"
+#include "renderer/vk_fmt_formatters.h"
 
 namespace volkano {
 

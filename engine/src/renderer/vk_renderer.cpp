@@ -108,6 +108,31 @@ VkBool32 VKAPI_PTR debug_utils_messenger_callback(
     return VK_FALSE;
 }
 
+u32 rate_physical_device(const vk::PhysicalDevice dev) noexcept
+{
+    // todo rate based on type, max limits, and queue family availability, (possibly other stuff too)
+    u32 rating = 0;
+    const vk::PhysicalDeviceProperties properties = dev.getProperties();
+    const vk::PhysicalDeviceFeatures features = dev.getFeatures();
+
+    switch (properties.deviceType) {
+        case vk::PhysicalDeviceType::eDiscreteGpu:
+            rating += 3000;
+            break;
+        case vk::PhysicalDeviceType::eIntegratedGpu:
+            rating += 1000;
+            break;
+        case vk::PhysicalDeviceType::eVirtualGpu:
+            rating += 50;
+            break;
+        case vk::PhysicalDeviceType::eOther:
+        case vk::PhysicalDeviceType::eCpu:
+            break;
+    }
+
+    return rating;
+}
+
 } // namespace
 
 void vk_renderer::initialize() noexcept
