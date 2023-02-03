@@ -504,7 +504,7 @@ void vk_renderer::create_swap_chain() noexcept
     const vk::SwapchainCreateInfoKHR swapchain_create_info{
       .surface = surface_,
       .minImageCount = surface_capabilities_.capabilities.minImageCount + 1,
-      .imageFormat = surface_fmt.format,
+      .imageFormat = surface_fmt_,
       .imageColorSpace = surface_fmt.colorSpace,
       .imageExtent = extent_,
       .imageArrayLayers = 1,
