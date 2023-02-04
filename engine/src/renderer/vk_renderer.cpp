@@ -143,9 +143,6 @@ void vk_renderer::initialize() noexcept
     create_surface();
     cache_physical_devices();
     create_graphics_pipeline();
-    create_framebuffers();
-    create_command_pool();
-    create_sync_objects();
 
     const vma::VulkanFunctions vk_funcs = vma::functionsFromDispatcher(VULKAN_HPP_DEFAULT_DISPATCHER);
     allocator_ = vk_check_result(vma::createAllocator(vma::AllocatorCreateInfo{
@@ -155,6 +152,11 @@ void vk_renderer::initialize() noexcept
       .instance = instance_,
       .vulkanApiVersion = available_vk_version_
     }));
+
+    create_framebuffers();
+    create_vertex_buffer();
+    create_command_pool();
+    create_sync_objects();
 }
 
 void vk_renderer::render() noexcept
@@ -167,11 +169,11 @@ void vk_renderer::render() noexcept
     command_buffer_.reset();
     record_command_buffer(image_idx);
 
-    const vk::PipelineStageFlags waitStages[]{vk::PipelineStageFlagBits::eColorAttachmentOutput};
+    const vk::PipelineStageFlags wait_stage{vk::PipelineStageFlagBits::eColorAttachmentOutput};
     const vk::SubmitInfo submit_info{
       .waitSemaphoreCount = 1,
       .pWaitSemaphores = &image_available_semaphore_,
-      .pWaitDstStageMask = waitStages,
+      .pWaitDstStageMask = &wait_stage,
       .commandBufferCount = 1,
       .pCommandBuffers = &command_buffer_,
       .signalSemaphoreCount = 1,
@@ -206,6 +208,9 @@ vk_renderer::~vk_renderer()
 {
     if (device_) {
         destroy_surface_objects();
+
+        allocator_.destroyBuffer(mesh_buffer_, mesh_buffer_allocation_);
+        allocator_.destroy();
 
         device_.destroy(swapchain_);
         device_.destroy(pipeline_layout_);
@@ -467,7 +472,7 @@ void vk_renderer::create_swap_chain() noexcept
             }
         }
 
-        return surface_capabilities_.formats[0];
+        return surface_capabilities_.formats.front();
     }();
     VKE_LOG(renderer, verbose, "swap chain surface format: {} color space: {}", surface_fmt.format, surface_fmt.colorSpace);
 
@@ -521,6 +526,10 @@ void vk_renderer::create_swap_chain() noexcept
 
     swapchain_ = vk_check_result(device_.createSwapchainKHR(swapchain_create_info));
     swapchain_images_ = vk_check_result(device_.getSwapchainImagesKHR(swapchain_));
+
+    if (swapchain_create_info.oldSwapchain) {
+        device_.destroy(swapchain_create_info.oldSwapchain);
+    }
 
     swapchain_image_views_.reserve(swapchain_images_.size());
     for (const vk::Image img : swapchain_images_) {
@@ -580,11 +589,32 @@ void vk_renderer::create_graphics_pipeline() noexcept
       .pDynamicStates = dynamic_states.data()
     };
 
+    const vk::VertexInputBindingDescription binding_description{
+      .binding = 0,
+      .stride = sizeof(vertex),
+      .inputRate = vk::VertexInputRate::eVertex
+    };
+
+    const static_vector<vk::VertexInputAttributeDescription, 2> attr_descriptions{
+      vk::VertexInputAttributeDescription{
+        .location = 0,
+        .binding = 0,
+        .format = vk::Format::eR32G32B32Sfloat,
+        .offset = static_cast<u32>(offsetof(vertex, position))
+      },
+      vk::VertexInputAttributeDescription{
+        .location = 1,
+        .binding = 0,
+        .format = vk::Format::eR32G32B32Sfloat,
+        .offset = static_cast<u32>(offsetof(vertex, color))
+      }
+    };
+
     const vk::PipelineVertexInputStateCreateInfo vertex_input_state_create_info{
-      .vertexBindingDescriptionCount = 0,
-      .pVertexBindingDescriptions = nullptr,
-      .vertexAttributeDescriptionCount = 0,
-      .pVertexAttributeDescriptions = nullptr
+      .vertexBindingDescriptionCount = 1,
+      .pVertexBindingDescriptions = &binding_description,
+      .vertexAttributeDescriptionCount = attr_descriptions.size(),
+      .pVertexAttributeDescriptions = attr_descriptions.data()
     };
 
     const vk::PipelineInputAssemblyStateCreateInfo input_assembly_state_create_info{
@@ -726,6 +756,29 @@ void vk_renderer::create_framebuffers() noexcept
     VKE_LOG(renderer, verbose, "framebuffers created");
 }
 
+void vk_renderer::create_vertex_buffer() noexcept
+{
+    const mesh_buffer<vertex>& vert_buf = triangle_mesh_.get_vertex_buffer();
+    const vk::BufferCreateInfo buffer_create_info{
+      .size = vk::DeviceSize{vert_buf.size_in_bytes()},
+      .usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst,
+      .sharingMode = vk::SharingMode::eExclusive,
+    };
+
+    const vma::AllocationCreateInfo alloc_create_info{
+      .flags = vma::AllocationCreateFlagBits::eMapped | vma::AllocationCreateFlagBits::eHostAccessRandom,
+      .usage = vma::MemoryUsage::eAuto,
+      .preferredFlags = vk::MemoryPropertyFlagBits::eHostCoherent
+    };
+
+    vma::AllocationInfo alloc_info;
+    std::tie(mesh_buffer_, mesh_buffer_allocation_) =
+      vk_check_result(allocator_.createBuffer(buffer_create_info, alloc_create_info, alloc_info));
+
+    std::memcpy(alloc_info.pMappedData, vert_buf.data(), vert_buf.size_in_bytes());
+    allocator_.flushAllocation(mesh_buffer_allocation_, alloc_info.offset, alloc_info.size);
+}
+
 void vk_renderer::create_command_pool() noexcept
 {
     const vk::CommandPoolCreateInfo command_pool_create_info{
@@ -741,7 +794,7 @@ void vk_renderer::create_command_pool() noexcept
       .commandBufferCount = 1
     };
 
-    command_buffer_ = vk_check_result(device_.allocateCommandBuffers(command_buffer_allocate_info))[0];
+    command_buffer_ = vk_check_result(device_.allocateCommandBuffers(command_buffer_allocate_info)).front();
     VKE_LOG(renderer, verbose, "cmd buffer allocated");
 }
 
@@ -810,7 +863,10 @@ void vk_renderer::record_command_buffer(u32 img_index) noexcept
     };
     command_buffer_.setScissor(0, 1, &scissor);
 
-    command_buffer_.draw(3, 1, 0, 0);
+    std::array buffers{mesh_buffer_};
+    std::array offsets{vk::DeviceSize{0}};
+    command_buffer_.bindVertexBuffers(0, buffers, offsets);
+    command_buffer_.draw(triangle_mesh_.get_vertex_buffer().size(), 1, 0, 0);
     command_buffer_.endRenderPass();
 
     VKE_ASSERT(command_buffer_.end() == vk::Result::eSuccess);

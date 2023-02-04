@@ -9,10 +9,12 @@
 
 #include <vector>
 
-#include "vk_include.h"
-#include "renderer_interface.h"
+#include "core/container/static_vector.h"
 #include "core/logging/logging.h"
 #include "core/filesystem/filesystem.h"
+#include "renderer/vk_include.h"
+#include "renderer/renderer_interface.h"
+#include "renderer/mesh.h"
 
 VKE_DECLARE_LOG_CATEGORY(vulkan);
 VKE_DECLARE_LOG_CATEGORY(renderer);
@@ -77,8 +79,24 @@ class vk_renderer : public renderer_interface {
 
     vma::Allocator allocator_ = nullptr;
 
+    mesh triangle_mesh_;
+    vk::Buffer mesh_buffer_ = nullptr;
+    vma::Allocation mesh_buffer_allocation_ = nullptr;
+
 public:
-    explicit vk_renderer(engine* engine) : engine_{engine} {}
+    explicit vk_renderer(engine* engine)
+      :engine_{engine}
+    {
+        const static_vector<vertex, 3> vertices{
+          {.position = vec3f{0.0f, -0.5f, 0.f}, .color = vec3f{1.0f, 0.0f, 0.0f}},
+          {.position = vec3f{0.5f, 0.5f, 0.f}, .color = vec3f{0.0f, 1.0f, 0.0f}},
+          {.position = vec3f{-0.5f, 0.5f, 0.f}, .color = vec3f{0.0f, 0.0f, 1.0f}}
+        };
+
+        const static_vector<u16, 1> indices{};
+        triangle_mesh_ = mesh{vertices, indices};
+    }
+
     ~vk_renderer();
 
     void initialize() noexcept override;
@@ -98,6 +116,7 @@ private:
     void create_graphics_pipeline() noexcept;
     void create_render_pass() noexcept;
     void create_framebuffers() noexcept;
+    void create_vertex_buffer() noexcept;
     void create_command_pool() noexcept;
     void create_sync_objects() noexcept;
 

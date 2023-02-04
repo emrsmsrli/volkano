@@ -50,6 +50,8 @@ add_library(${PROJECT_NAME}
         include/core/util/fmt_formatters.h
         include/renderer/null_renderer.h
         include/renderer/renderer_interface.h
+        include/renderer/mesh.h
+        include/renderer/vertex.h
         include/renderer/vk_include.h
         include/renderer/vk_renderer.h
         src/volkano.cpp
