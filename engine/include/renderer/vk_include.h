@@ -35,7 +35,7 @@ inline void vk_check_result(vk::Result result, std::span<vk::Result> invalid_res
     VKE_ASSERT_MSG(!ranges::contains(invalid_results, result), "result: {}", result);
 }
 
-decltype(auto) vk_check_result(auto vk_ret)
+[[nodiscard]] decltype(auto) vk_check_result(auto vk_ret)
 {
     vk_check_result(vk_ret.result);
     return vk_ret.value;
