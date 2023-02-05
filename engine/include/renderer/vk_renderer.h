@@ -85,7 +85,7 @@ class vk_renderer : public renderer_interface {
 
 public:
     explicit vk_renderer(engine* engine)
-      :engine_{engine}
+      : engine_{engine}
     {
         const static_vector<vertex, 3> vertices{
           {.position = vec3f{0.0f, -0.5f, 0.f}, .color = vec3f{1.0f, 0.0f, 0.0f}},
