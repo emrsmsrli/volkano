@@ -48,6 +48,7 @@ add_library(${PROJECT_NAME}
         include/core/math/vec2.h
         include/core/memory/aligned_union.h
         include/core/util/fmt_formatters.h
+        include/core/util/string_utils.h
         include/renderer/null_renderer.h
         include/renderer/renderer_interface.h
         include/renderer/mesh.h
@@ -57,6 +58,7 @@ add_library(${PROJECT_NAME}
         src/volkano.cpp
         src/core/filesystem/filesystem.cpp
         src/core/logging/logging.cpp
+        src/core/util/string_utils.cpp
         src/renderer/vk_renderer.cpp
         src/renderer/vma_impl.cpp)
 

@@ -12,6 +12,7 @@ find_package(doctest CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME}
         engine/core/static_vector.cpp
+        engine/core/string_utils.cpp
         main.cpp)
 
 target_set_cxx_standard(${PROJECT_NAME} 20)
