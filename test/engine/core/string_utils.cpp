@@ -16,13 +16,13 @@ TEST_CASE("split string")
 {
     SUBCASE("empty") {
         std::string e;
-        std::vector<std::string_view> v = split({e, ","});
+        std::vector<std::string_view> v = split(e, ",");
         REQUIRE(v.empty());
     }
 
     SUBCASE("default params") {
         std::string e = "tok1 tok2\ntok3\ttok4";
-        std::vector<std::string_view> v = split({e, " \n\t"});
+        std::vector<std::string_view> v = split(e, " \n\t");
         REQUIRE(v.size() == 4);
         REQUIRE((v[0] == "tok1"));
         REQUIRE((v[1] == "tok2"));
@@ -32,24 +32,37 @@ TEST_CASE("split string")
 
     SUBCASE("custom param") {
         std::string e = "tok1 tok2\ntok3\ttok4.tok5";
-        std::vector<std::string_view> v = split({e, "."});
+        std::vector<std::string_view> v = split(e, ".");
         REQUIRE(v.size() == 2);
         REQUIRE((v[0] == "tok1 tok2\ntok3\ttok4"));
         REQUIRE((v[1] == "tok5"));
     }
 
-    SUBCASE("allow empty") {
-        std::string e = "tok1\n\ntok2";
-        std::vector<std::string_view> v = split(split_params{
-          .src = e,
-          .delims = "\n",
-          .allow_empty_tokens = true
-        });
+    SUBCASE("discard empty at begin") {
+        std::string e = "\n\ntok1\n\ntok2";
+        std::vector<std::string_view> v = split(e, "\n");
 
-        REQUIRE(v.size() == 3);
+        REQUIRE(v.size() == 2);
         REQUIRE((v[0] == "tok1"));
-        REQUIRE((v[1].empty()));
-        REQUIRE((v[2] == "tok2"));
+        REQUIRE((v[1] == "tok2"));
+    }
+
+    SUBCASE("discard empty at middle") {
+        std::string e = "tok1\n\ntok2";
+        std::vector<std::string_view> v = split(e, "\n");
+
+        REQUIRE(v.size() == 2);
+        REQUIRE((v[0] == "tok1"));
+        REQUIRE((v[1] == "tok2"));
+    }
+
+    SUBCASE("discard empty at end") {
+        std::string e = "tok1\n\ntok2\n\n";
+        std::vector<std::string_view> v = split(e, "\n");
+
+        REQUIRE(v.size() == 2);
+        REQUIRE((v[0] == "tok1"));
+        REQUIRE((v[1] == "tok2"));
     }
 }
 
