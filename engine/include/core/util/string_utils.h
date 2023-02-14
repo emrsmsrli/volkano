@@ -18,6 +18,12 @@
 
 namespace volkano::string {
 
+struct split_params {
+    std::string_view src;
+    std::string_view delims = ",";
+    bool cull_empty = true;
+};
+
 template<typename T>
 concept string_like =
   std::same_as<T, std::string> ||
@@ -43,6 +49,8 @@ template<typename Rng, typename... Args>
     requires ranges::range<Rng>
 join_params(Rng&&, Args&&...) -> join_params<ranges::iter_value_t<Rng>>;
 
+u32 split_into(std::vector<std::string_view>& tokens, const split_params& params) noexcept;
+std::vector<std::string_view> split(const split_params& params) noexcept;
 std::vector<std::string_view> split(std::string_view src, std::string_view delims = ",") noexcept;
 std::vector<std::string_view> split_lines(std::string_view src) noexcept;
 

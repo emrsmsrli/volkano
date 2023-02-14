@@ -38,7 +38,7 @@ TEST_CASE("split string")
         REQUIRE((v[1] == "tok5"));
     }
 
-    SUBCASE("discard empty at begin") {
+    SUBCASE("cull empty at begin") {
         std::string e = "\n\ntok1\n\ntok2";
         std::vector<std::string_view> v = split(e, "\n");
 
@@ -47,7 +47,7 @@ TEST_CASE("split string")
         REQUIRE((v[1] == "tok2"));
     }
 
-    SUBCASE("discard empty at middle") {
+    SUBCASE("cull empty at middle") {
         std::string e = "tok1\n\ntok2";
         std::vector<std::string_view> v = split(e, "\n");
 
@@ -56,13 +56,29 @@ TEST_CASE("split string")
         REQUIRE((v[1] == "tok2"));
     }
 
-    SUBCASE("discard empty at end") {
+    SUBCASE("cull empty at end") {
         std::string e = "tok1\n\ntok2\n\n";
         std::vector<std::string_view> v = split(e, "\n");
 
         REQUIRE(v.size() == 2);
         REQUIRE((v[0] == "tok1"));
         REQUIRE((v[1] == "tok2"));
+    }
+
+    SUBCASE("preserve empty") {
+        std::string e = "tok1\n\ntok2\n\n";
+        std::vector<std::string_view> v = split({
+          .src = e,
+          .delims = "\n",
+          .cull_empty = false
+        });
+
+        REQUIRE(v.size() == 5);
+        REQUIRE((v[0] == "tok1"));
+        REQUIRE(v[1].empty());
+        REQUIRE((v[2] == "tok2"));
+        REQUIRE(v[3].empty());
+        REQUIRE(v[4].empty());
     }
 }
 
