@@ -735,7 +735,7 @@ void vk_renderer::create_render_pass() noexcept
 
     render_pass_ = vk_check_result(device_.createRenderPass(render_pass_create_info));
     VKE_LOG(renderer, verbose, "render pass created");
-};
+}
 
 void vk_renderer::create_framebuffers() noexcept
 {
