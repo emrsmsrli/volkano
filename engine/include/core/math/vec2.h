@@ -57,7 +57,7 @@ struct vec2 {
         switch (idx) {
             case 0: return x;
             case 1: return y;
-            default: VKE_ASSERT_MSG(false, "vec2 idx cannot be {}", idx);
+            default: VKE_UNREACHABLE();
         }
     }
 
@@ -66,7 +66,7 @@ struct vec2 {
         switch (idx) {
             case 0: return x;
             case 1: return y;
-            default: VKE_ASSERT_MSG(false, "vec2 idx cannot be {}", idx);
+            default: VKE_UNREACHABLE();
         }
     }
 

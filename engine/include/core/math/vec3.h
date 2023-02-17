@@ -59,6 +59,7 @@ struct vec3 {
         if (is_zero()) { // todo check nearly zero
             return zero;
         }
+
         return get_normalized();
     }
 
@@ -68,7 +69,7 @@ struct vec3 {
             case 0: return x;
             case 1: return y;
             case 2: return z;
-            default: VKE_ASSERT_MSG(false, "vec3 idx cannot be {}", idx);
+            default: VKE_UNREACHABLE();
         }
     }
 
@@ -78,7 +79,7 @@ struct vec3 {
             case 0: return x;
             case 1: return y;
             case 2: return z;
-            default: VKE_ASSERT_MSG(false, "vec3 idx cannot be {}", idx);
+            default: VKE_UNREACHABLE();
         }
     }
 

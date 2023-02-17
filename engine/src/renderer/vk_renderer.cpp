@@ -57,7 +57,7 @@ VkBool32 VKAPI_PTR debug_utils_messenger_callback(
             case vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning: return log_verbosity::warning;
             case vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo: return log_verbosity::info;
             case vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose: return log_verbosity::verbose;
-            default: unreachable();
+            default: VKE_UNREACHABLE();
         }
     }();
 
@@ -99,7 +99,7 @@ VkBool32 VKAPI_PTR debug_utils_messenger_callback(
         case vk::DebugUtilsMessageTypeFlagBitsEXT::eDeviceAddressBinding:
             VKE_DEBUG_UTILS_LOG(vulkan_dev_addr_binding);
             break;
-        default: unreachable();
+        default: VKE_UNREACHABLE();
     }
 
 #undef VKE_DEBUG_UTILS_LOG

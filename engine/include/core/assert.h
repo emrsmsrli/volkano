@@ -29,22 +29,37 @@ namespace volkano {
 #endif
 }
 
-#ifndef VKE_ASSERT_MSG
-  #if DEBUG || defined(VKE_ENABLE_ASSERTIONS)
+#if DEBUG || defined(VKE_ENABLE_ASSERTIONS)
+  #define VKE_UNREACHABLE()                               \
+    do {                                                  \
+      VKE_LOG(general, critical, "unreachable code hit"); \
+      debug_break();                                      \
+      std::terminate();                                   \
+    } while(false)
+
+  #ifndef VKE_ASSERT_MSG
       #define VKE_ASSERT_MSG(predicate, ...)          \
         do {                                          \
             if(!(predicate)) {                        \
                 VKE_LOG(general, critical,            \
                   "!(" #predicate "): " __VA_ARGS__); \
-                std::fflush(stdout);                  \
                 debug_break();                        \
                 std::terminate();                     \
             }                                         \
-        } while(0)
-  #else
-    #define VKE_ASSERT_MSG(...) void(0)
-  #endif // DEBUG || defined(VKE_ENABLE_ASSERTIONS)
-#endif // ifndef VKE_ASSERT_MSG
+        } while(false)
+  #endif // ifndef VKE_ASSERT_MSG
+#else
+  #define VKE_UNREACHABLE() ::volkano::unreachable()
+
+  #ifndef VKE_ASSERT_MSG
+    #define VKE_ASSERT_MSG(predicate, ...) \
+      do {                                 \
+        if (!(predicate)) {                \
+          std::terminate();                \
+        }                                  \
+      } while(false) // todo show file dialog
+  #endif // ifndef VKE_ASSERT_MSG
+#endif // DEBUG || defined(VKE_ENABLE_ASSERTIONS)
 
 #define VKE_ASSERT(predicate) VKE_ASSERT_MSG(predicate, "assertion failed")
 
