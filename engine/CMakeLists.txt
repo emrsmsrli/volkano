@@ -13,8 +13,13 @@ configure_file(cmake/volkano_version.in
 
 find_package(magic_enum CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
-find_package(Vulkan REQUIRED COMPONENTS glslc)
-find_program(glslc_executable NAMES glslc HINTS Vulkan::glslc)
+find_package(Vulkan REQUIRED COMPONENTS glslangValidator)
+find_program(glslangValidator_executable NAMES glslangValidator HINTS Vulkan::glslangValidator)
+if (glslangValidator_executable_FOUND)
+    message(FATAL_ERROR "volkano - glslangValidator not found")
+else()
+    message(STATUS "volkano - glslandValidator_executable found at ${glslangValidator_executable}")
+endif()
 
 include(SetTargetStandard)
 
@@ -96,7 +101,13 @@ foreach(SOURCE ${SHADER_SOURCES})
     get_filename_component(SOURCE_FILENAME ${SOURCE} NAME)
     set(BINARY ${CMAKE_CURRENT_BINARY_DIR}/shaders/${SOURCE_FILENAME}.spr)
     add_custom_command(OUTPUT ${BINARY}
-            COMMAND  ${glslc_executable} ${SOURCE} -o ${BINARY}
+            COMMAND ${glslangValidator_executable}
+                --target-env vulkan1.3
+                -DDEBUG=$<IF:$<CONFIG:Debug>,1,0>
+                -I${CMAKE_CURRENT_SOURCE_DIR}/shaders/
+                -o ${BINARY}
+                $<$<CONFIG:Debug>:-g>
+                ${SOURCE}
             DEPENDS ${SOURCE}
             COMMENT "Compiling ${SOURCE}")
     list(APPEND SHADER_BINARIES ${BINARY})
