@@ -29,7 +29,7 @@ struct vec2 {
 
     constexpr bool normalize_safe() noexcept
     {
-        if (is_zero()) { // todo check nearly zero
+        if (is_nearly_zero()) {
             return false;
         }
 
@@ -46,7 +46,7 @@ struct vec2 {
 
     [[nodiscard]] constexpr vec2 get_normalized_safe() const noexcept
     {
-        if (is_zero()) { // todo check nearly zero
+        if (is_nearly_zero()) {
             return zero;
         }
         return get_normalized();
@@ -95,6 +95,7 @@ struct vec2 {
     [[nodiscard]] constexpr bool is_unit() const noexcept { return length_sq() == T(1); };
     [[nodiscard]] constexpr bool is_zero() const noexcept { return *this == zero(); };
     [[nodiscard]] constexpr bool has_nan() const noexcept requires std::floating_point<T> { return math::any_nans(x, y); }
+    [[nodiscard]] constexpr bool is_nearly_zero() const noexcept { return math::is_nearly_zero(x) && math::is_nearly_zero(y); };
 
     static constexpr vec2 unit_x() noexcept { return {.x = T(1), .y = T(0)}; }
     static constexpr vec2 unit_y() noexcept { return {.x = T(0), .y = T(1)}; }
