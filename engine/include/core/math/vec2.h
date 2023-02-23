@@ -94,7 +94,7 @@ struct vec2 {
     constexpr bool operator!=(const vec2& other) const noexcept { return !(*this == other); };
     [[nodiscard]] constexpr bool is_unit() const noexcept { return length_sq() == T(1); };
     [[nodiscard]] constexpr bool is_zero() const noexcept { return *this == zero(); };
-    [[nodiscard]] constexpr bool has_nan() const noexcept requires std::floating_point<T> { return std::isnan(x) || std::isnan(y); }
+    [[nodiscard]] constexpr bool has_nan() const noexcept requires std::floating_point<T> { return math::any_nans(x, y); }
 
     static constexpr vec2 unit_x() noexcept { return {.x = T(1), .y = T(0)}; }
     static constexpr vec2 unit_y() noexcept { return {.x = T(0), .y = T(1)}; }

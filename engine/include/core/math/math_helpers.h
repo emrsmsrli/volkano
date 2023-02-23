@@ -21,6 +21,13 @@ constexpr T square(const T val) noexcept
     return val * val;
 }
 
+template<typename... T>
+  requires (std::floating_point<T> && ...)
+constexpr bool any_nans(const T... vals) noexcept
+{
+    return (std::isnan(vals) || ...);
+}
+
 template<std::floating_point Fp>
 bool is_nearly_equal(const Fp l, const Fp r, const Fp epsilon = consts::small_float) noexcept
 {
