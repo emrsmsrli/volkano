@@ -28,6 +28,8 @@ struct vk_queue_family_indices {
     u32 present_index = invalid_index;
     u32 compute_index = invalid_index;
     u32 transfer_index = invalid_index;
+
+    [[nodiscard]] std::array<u32, 4> all_indices() const noexcept { return {graphics_index, present_index, compute_index, transfer_index}; }
 };
 
 struct vk_surface_capabilities {

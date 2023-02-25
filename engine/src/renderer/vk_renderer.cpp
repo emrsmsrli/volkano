@@ -78,7 +78,7 @@ VkBool32 VKAPI_PTR debug_utils_messenger_callback(
           fmt::join(std::span{pCallbackData->pObjects, pCallbackData->objectCount}, "\n\t"));
     }();
 
-#define VKE_DEBUG_UTILS_LOG(category) VKE_LOG_DYN(category, verbosity, "{}({}): {}{}{}",                        \
+#define VKE_DEBUG_UTILS_LOG(category) VKE_LOG_DYN(category, verbosity, "{}({})\n\t{}{}{}",                      \
       pCallbackData->pMessageIdName,                                                                            \
       pCallbackData->messageIdNumber,                                                                           \
       pCallbackData->pMessage,                                                                                  \
@@ -407,7 +407,6 @@ void vk_renderer::populate_queue_family_indices() noexcept
           return (props.queueFlags & vk::QueueFlagBits::eCompute) == vk::QueueFlagBits::eCompute;
       });
 
-    // todo make graphics optional in case engine is running without graphics
     VKE_LOG(renderer, verbose, "queue family indices seleced - graphics: {} present: {} compute: {} transfer: {}",
       queue_family_indices_.graphics_index,
       queue_family_indices_.present_index,
@@ -417,13 +416,24 @@ void vk_renderer::populate_queue_family_indices() noexcept
 
 void vk_renderer::create_logical_device() noexcept
 {
+    // todo make graphics optional in case engine is running without graphics
     VKE_ASSERT(queue_family_indices_.graphics_index != vk_queue_family_indices::invalid_index);
-    const float priority = 1.0f;
-    const vk::DeviceQueueCreateInfo device_queue_create_info{
-      .queueFamilyIndex = queue_family_indices_.graphics_index,
-      .queueCount = 1,
-      .pQueuePriorities = &priority
-    };
+
+    const auto all_indices = queue_family_indices_.all_indices();
+    static_vector<vk::DeviceQueueCreateInfo, 4> create_infos;
+    ranges::transform(
+      all_indices
+        | ranges::views::filter([](u32 idx) { return idx != vk_queue_family_indices::invalid_index; })
+        | ranges::views::unique,
+      std::back_inserter(create_infos),
+      [](u32 idx) {
+          const float priority = 1.0f;
+          return vk::DeviceQueueCreateInfo{
+            .queueFamilyIndex = idx,
+            .queueCount = 1,
+            .pQueuePriorities = &priority
+          };
+      });
 
     const std::vector<vk::ExtensionProperties> device_extension_properties = vk_check_result(physical_device_.enumerateDeviceExtensionProperties());
     VKE_LOG(renderer, verbose, "device extension properties:\n\t{}", fmt::join(device_extension_properties, "\n\t"));
@@ -436,9 +446,9 @@ void vk_renderer::create_logical_device() noexcept
 
     const vk::PhysicalDeviceFeatures physical_device_features;
     const vk::DeviceCreateInfo create_info{
-      .queueCreateInfoCount = 1,
-      .pQueueCreateInfos = &device_queue_create_info,
-      .enabledExtensionCount = static_cast<uint32_t>(device_extensions.size()),
+      .queueCreateInfoCount = create_infos.size(),
+      .pQueueCreateInfos = create_infos.data(),
+      .enabledExtensionCount = device_extensions.size(),
       .ppEnabledExtensionNames = device_extensions.data(),
       .pEnabledFeatures = &physical_device_features,
     };
@@ -452,8 +462,8 @@ void vk_renderer::cache_queues() noexcept
 {
     graphics_queue_ = device_.getQueue(queue_family_indices_.graphics_index, /*queueIndex=*/0);
     present_queue_ = device_.getQueue(queue_family_indices_.present_index, /*queueIndex=*/0);
-    // compute_queue_ = device_.getQueue(queue_family_indices_.compute_index, /*queueIndex=*/0);
-    // transfer_queue_ = device_.getQueue(queue_family_indices_.transfer_index, /*queueIndex=*/0);
+    compute_queue_ = device_.getQueue(queue_family_indices_.compute_index, /*queueIndex=*/0);
+    transfer_queue_ = device_.getQueue(queue_family_indices_.transfer_index, /*queueIndex=*/0);
 }
 
 void vk_renderer::create_swap_chain() noexcept
@@ -822,7 +832,7 @@ void vk_renderer::destroy_surface_objects() noexcept
 void vk_renderer::record_command_buffer(u32 img_index) noexcept
 {
     vk::CommandBufferBeginInfo cmd_buffer_begin_info{};
-    VKE_ASSERT(command_buffer_.begin(cmd_buffer_begin_info) == vk::Result::eSuccess);
+    vk_check_result(command_buffer_.begin(cmd_buffer_begin_info));
 
     const vk::ClearValue clear_color_value{
       .color = vk::ClearColorValue{{{0.f, 0.f, 0.f, 1.f}}}
@@ -863,10 +873,10 @@ void vk_renderer::record_command_buffer(u32 img_index) noexcept
     std::array buffers{mesh_buffer_};
     std::array offsets{vk::DeviceSize{0}};
     command_buffer_.bindVertexBuffers(0, buffers, offsets);
-    command_buffer_.draw(triangle_mesh_.get_vertex_buffer().size(), 1, 0, 0);
+    command_buffer_.draw(static_cast<u32>(triangle_mesh_.get_vertex_buffer().size()), 1, 0, 0);
     command_buffer_.endRenderPass();
 
-    VKE_ASSERT(command_buffer_.end() == vk::Result::eSuccess);
+    vk_check_result(command_buffer_.end());
 }
 
 vk::ShaderModule vk_renderer::create_shader_module(std::span<const u8> spirv_binary) noexcept
