@@ -357,7 +357,6 @@ void vk_renderer::switch_physical_device_to(const vk::PhysicalDevice dev) noexce
 
 void vk_renderer::populate_queue_family_indices() noexcept
 {
-    // todo improve this logic
     const std::vector<vk::QueueFamilyProperties> q_family_props = physical_device_.getQueueFamilyProperties();
     for (u32 idx = 0; const vk::QueueFamilyProperties& props : q_family_props) {
         if (queue_family_indices_.graphics_index == vk_queue_family_indices::invalid_index &&
@@ -372,16 +371,14 @@ void vk_renderer::populate_queue_family_indices() noexcept
         }
 
         // prefer separate transfer queue
-        constexpr auto standalone_transfer_q_flags = ~(vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute) | vk::QueueFlagBits::eTransfer;
         if (queue_family_indices_.transfer_index == vk_queue_family_indices::invalid_index &&
-          props.queueFlags & standalone_transfer_q_flags) {
+          props.queueFlags & vk::QueueFlagBits::eTransfer && ~props.queueFlags & (vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute)) {
             queue_family_indices_.transfer_index = idx;
         }
 
         // prefer separate compute queue
-        constexpr auto standalone_compute_q_flags = ~(vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eTransfer) | vk::QueueFlagBits::eCompute;
         if (queue_family_indices_.compute_index == vk_queue_family_indices::invalid_index &&
-          props.queueFlags & standalone_compute_q_flags) {
+          props.queueFlags & vk::QueueFlagBits::eCompute && ~props.queueFlags & vk::QueueFlagBits::eGraphics) {
             queue_family_indices_.compute_index = idx;
         }
 
