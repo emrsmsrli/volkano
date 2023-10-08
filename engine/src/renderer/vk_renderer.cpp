@@ -14,6 +14,8 @@
 #include <range/v3/algorithm/contains.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/filter.hpp>
+#include <range/v3/algorithm/transform.hpp>
+#include <range/v3/view/unique.hpp>
 
 #include "version.h"
 #include "core/algo/contains_if.h"

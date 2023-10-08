@@ -191,14 +191,14 @@ public:
 
     constexpr iterator begin() noexcept { return iterator{ptr(0)}; }
     constexpr const_iterator begin() const noexcept { return const_iterator{ptr(0)}; }
-    constexpr iterator end() noexcept { return iterator{ptr(0), size_}; }
-    constexpr const_iterator end() const noexcept { return const_iterator{ptr(0), size_}; }
+    constexpr iterator end() noexcept { return iterator{ptr(0)}; }
+    constexpr const_iterator end() const noexcept { return const_iterator{ptr(0)}; }
     constexpr reverse_iterator rbegin() noexcept { return reverse_iterator{end()}; }
     constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator{begin()}; }
     constexpr reverse_iterator rend() noexcept { return reverse_iterator{end()}; }
     constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator{begin()}; }
     constexpr const_iterator cbegin() const noexcept { return const_iterator{ptr(0)}; }
-    constexpr const_iterator cend() const noexcept { return const_iterator{ptr(0), size_}; }
+    constexpr const_iterator cend() const noexcept { return const_iterator{ptr(0)}; }
     constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator{cend()}; }
     constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator{cbegin()}; }
 
