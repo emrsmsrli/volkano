@@ -96,6 +96,8 @@ set(SHADER_BINARIES)
 set(SHADER_SOURCES
         ${SHADER_SRC_DIR}/triangle.vert
         ${SHADER_SRC_DIR}/triangle.frag)
+ 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/shaders)
 
 foreach(SOURCE ${SHADER_SOURCES})
     get_filename_component(SOURCE_FILENAME ${SOURCE} NAME)
